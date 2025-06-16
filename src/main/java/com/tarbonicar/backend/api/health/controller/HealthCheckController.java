@@ -23,6 +23,7 @@ public class HealthCheckController {
     @GetMapping("/health-check-data")
     public ResponseEntity<ApiResponse<String>> healthCheckData() {
 
+
         return ApiResponse.success(SuccessStatus.SEND_HEALTH_SUCCESS, "OK");
     }
 
