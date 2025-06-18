@@ -23,6 +23,6 @@ public class Member extends BaseTimeEntity {
     private String profileImage;
     private String socialType;
     private String socialId;
-
+    private String refreshToken;
 
 }
