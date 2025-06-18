@@ -24,6 +24,9 @@ public enum ErrorStatus {
      */
 
     NOT_LOGIN_EXCEPTION(HttpStatus.NOT_FOUND,"로그인이 필요합니다."),
+    NOT_FOUND_CARTYPE_EXCEPTION(HttpStatus.NOT_FOUND,"존재하지 않는 차량 타입 입니다."),
+    NOT_FOUND_CARNAME_EXCEPTION(HttpStatus.NOT_FOUND,"존재하지 않는 차량 이름 입니다."),
+    NOT_FOUND_CARAGE_EXCEPTION(HttpStatus.NOT_FOUND,"존재하지 않는 차량 연식 입니다."),
 
     /**
      * 500 SERVER_ERROR

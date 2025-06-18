@@ -14,11 +14,18 @@ public enum SuccessStatus {
      */
     SEND_REGISTER_SUCCESS(HttpStatus.OK,"회원가입 성공"),
     SEND_HEALTH_SUCCESS(HttpStatus.OK,"서버 응답 성공"),
+    SEND_CARTYPE_CATEGORY_SUCCESS(HttpStatus.OK,"차량 종류 카테고리 조회 성공"),
+    SEND_CARNAME_CATEGORY_SUCCESS(HttpStatus.OK,"차량 카테고리 조회 성공"),
+    SEND_CARAGE_CATEGORY_SUCCESS(HttpStatus.OK,"차량 연식 카테고리 조회 성공"),
+    DELETE_CARAGE_SUCCESS(HttpStatus.OK,"차량 연식 카테고리 삭제 성공"),
+    DELETE_CARNAME_SUCCESS(HttpStatus.OK,"차량 이름 카테고리 삭제 성공"),
+    DELETE_CARTYPE_SUCCESS(HttpStatus.OK,"차량 타입 카테고리 삭제 성공"),
 
     /**
      * 201
      */
     CREATE_ARTICLE_SUCCESS(HttpStatus.CREATED, "게시글 등록 성공"),
+    CREATE_CATEGORY_SUCCESS(HttpStatus.CREATED, "카테고리 등록 성공"),
 
     ;
 

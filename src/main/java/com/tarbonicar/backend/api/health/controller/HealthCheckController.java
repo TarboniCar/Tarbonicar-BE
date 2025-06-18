@@ -4,12 +4,14 @@ import com.tarbonicar.backend.common.exception.BadRequestException;
 import com.tarbonicar.backend.common.response.ApiResponse;
 import com.tarbonicar.backend.common.response.SuccessStatus;
 import com.tarbonicar.backend.common.response.ErrorStatus;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
+@Tag(name="Health Check", description = "Health Check 관련 API입니다.")
 public class HealthCheckController {
 
     // 응답 시 데이터 반환 없이 응답코드, 응답 메세지만 보낼때
