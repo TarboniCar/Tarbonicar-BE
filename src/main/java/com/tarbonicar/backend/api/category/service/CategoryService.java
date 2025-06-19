@@ -17,6 +17,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
 import java.util.stream.Collectors;
 
 @Service
@@ -91,7 +93,7 @@ public class CategoryService {
                 .collect(Collectors.toList());
     }
 
-    // 차량 연식 조회 메서드
+    // [게시글 작성 페이지 전용] 차량 연식 조회 메서드
     @Transactional(readOnly = true)
     public List<CarAgeResponseDTO> getCarAgeCategory(String carName) {
 
@@ -103,6 +105,51 @@ public class CategoryService {
                         age.getId(),
                         age.getCarAge()
                 ))
+                .collect(Collectors.toList());
+    }
+
+    // [메인, 게시글 리스트 페이지 전용] 차량 연식 조회 메서드
+    @Transactional(readOnly = true)
+    public List<CarAgeResponseDTO> getHomeCarAgeCategory(String carTypeParam, String carNameParam
+    ) {
+        List<CarAge> rawAges;
+
+        if ("all".equalsIgnoreCase(carTypeParam)) {
+            // 전체 연식
+            rawAges = carAgeRepository.findAll();
+        } else {
+            // 차종이 지정된 경우 해당 CarType 조회
+            CarType type = carTypeRepository.findByCarType(carTypeParam)
+                    .orElseThrow(() -> new NotFoundException(ErrorStatus.NOT_FOUND_CARTYPE_EXCEPTION.getMessage()));
+
+            if ("all".equalsIgnoreCase(carNameParam)) {
+                // carName=all → 해당 차종의 모든 CarName → 각 연식 합치기
+                List<CarName> names = carNameRepository.findAllByCarType(type);
+                rawAges = names.stream()
+                        .flatMap(name -> carAgeRepository.findAllByCarName(name).stream())
+                        .collect(Collectors.toList());
+            } else {
+                // 특정 차량명 지정 → CarName 조회 → 연식만
+                CarName name = carNameRepository
+                        .findByCarNameAndCarType(carNameParam, type)
+                        .orElseThrow(() -> new NotFoundException(ErrorStatus.NOT_FOUND_CARNAME_EXCEPTION.getMessage()));
+                rawAges = carAgeRepository.findAllByCarName(name);
+            }
+        }
+
+        // 중복 연식 제거 + 정렬 + 대표 ID 선택
+        // Map<연식값, CarAge> 으로 묶어서 TreeMap 으로 정렬
+        Map<Integer, CarAge> ageMap = new TreeMap<>();
+        for (CarAge age : rawAges) {
+            int val = age.getCarAge();
+            // 최초로 등장하거나, ID가 더 작은 경우 대표로 저장
+            if (!ageMap.containsKey(val) || age.getId() < ageMap.get(val).getId()) {
+                ageMap.put(val, age);
+            }
+        }
+
+        return ageMap.values().stream()
+                .map(a -> new CarAgeResponseDTO(a.getId(), a.getCarAge()))
                 .collect(Collectors.toList());
     }
 

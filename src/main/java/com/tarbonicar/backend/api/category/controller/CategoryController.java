@@ -58,7 +58,7 @@ public class CategoryController {
         return ApiResponse.success(SuccessStatus.SEND_CARNAME_CATEGORY_SUCCESS, names);
     }
 
-    @Operation(summary = "차량 연식 카테고리 조회 API", description = "등록 된 차량 연식 리스트를 조회합니다.")
+    @Operation(summary = "[게시글 작성 페이지 전용] 차량 연식 카테고리 조회 API", description = "등록 된 차량 연식 리스트를 조회합니다.")
     @ApiResponses({
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "차량 연식 카테고리 조회 성공")
     })
@@ -66,6 +66,19 @@ public class CategoryController {
     public ResponseEntity<ApiResponse<List<CarAgeResponseDTO>>> getCarAgeCategory(@RequestParam String carName) {
 
         List<CarAgeResponseDTO> ages = categoryService.getCarAgeCategory(carName);
+        return ApiResponse.success(SuccessStatus.SEND_CARNAME_CATEGORY_SUCCESS, ages);
+    }
+
+    @Operation(
+            summary = "[메인, 게시글 리스트 페이지 전용] 차량 연식 카테고리 조회 API",
+            description = "조건에 따라 연식 리스트를 조회합니다. <br>" + "<br>만약 모두 전체 보기로 할 때 -> carType = all, carName = all <br>" + "만약 SUV에서 전체 보기로 할 때 -> carType = SUV, carName = all <br>" + "만약 SUV에서 투싼의 연식을 볼 떄 -> carType = SUV, carName = 투싼"
+    )
+    @ApiResponses({
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "차량 연식 카테고리 조회 성공")})
+    @GetMapping("/search/home/carage")
+    public ResponseEntity<ApiResponse<List<CarAgeResponseDTO>>> getHomeCarAgeCategory(@RequestParam String carType, @RequestParam String carName) {
+
+        List<CarAgeResponseDTO> ages = categoryService.getHomeCarAgeCategory(carType.trim(), carName.trim());
         return ApiResponse.success(SuccessStatus.SEND_CARNAME_CATEGORY_SUCCESS, ages);
     }
 
