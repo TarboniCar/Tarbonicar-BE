@@ -55,7 +55,7 @@ public class SecurityConfig {
                         .requestMatchers("/h2-console/**", "/swagger-ui/**", "/v3/api-docs/**", "/swagger-resources/**", "/swagger-ui.html", "/webjars/**", "/api-doc").permitAll() // H2, Swagger 인증 허용
                         .requestMatchers("/api/v1/member/signup").permitAll() // 회원가입 인증 허용
                         .requestMatchers("/api/v1/category", "/api/v1/category/search/**", "/api/v1/category/**").permitAll() // 카테고리 관련 인증 허용
-                        .requestMatchers("/api/v1/s3/upload-image").permitAll() // 이미지 업로드 인증 허용 - 추후 허용 해제 예정
+                        .requestMatchers("/api/v1/s3/upload-image", "/api/v1/article", "/api/v1/article/**").permitAll() // 이미지 업로드, 게시글 관련 인증 허용 - 추후 허용 해제 예정
                         .anyRequest().authenticated()
                 )
                 .exceptionHandling(e -> e
