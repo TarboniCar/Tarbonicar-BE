@@ -1,8 +1,8 @@
 package com.tarbonicar.backend.api.article.controller;
 
-import com.tarbonicar.backend.api.article.dto.ArticleCreateDTO;
-import com.tarbonicar.backend.api.article.dto.ArticleDetailResponseDTO;
-import com.tarbonicar.backend.api.article.dto.ArticleUpdateDTO;
+import com.tarbonicar.backend.api.article.dto.*;
+import com.tarbonicar.backend.api.article.entity.ArticleType;
+import com.tarbonicar.backend.api.article.entity.SortType;
 import com.tarbonicar.backend.api.article.service.ArticleService;
 import com.tarbonicar.backend.common.response.ApiResponse;
 import com.tarbonicar.backend.common.response.SuccessStatus;
@@ -12,6 +12,8 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @Tag(name="Article", description = "Article 관련 API 입니다.")
@@ -31,6 +33,27 @@ public class ArticleController {
 
         articleService.createArticle(articleCreateDTO);
         return ApiResponse.success_only(SuccessStatus.CREATE_ARTICLE_SUCCESS);
+    }
+
+    @Operation(summary = "게시글 목록 조회 API", description = "등록된 게시글 목록을 조회 합니다.")
+    @ApiResponses({
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "게시글 목록 조회 성공")
+    })
+    @GetMapping("/list")
+    public ResponseEntity<ApiResponse<List<ArticleResponseDTO>>> getArticle(
+            @RequestParam(required = false) String carType,
+            @RequestParam(required = false) List<String> carName,
+            @RequestParam(required = false) List<Integer> carAge,
+            @RequestParam(required = false) List<ArticleType> articleType,
+            @RequestParam(required = false, defaultValue = "RECENT") SortType sortType
+    ) {
+        System.out.println("=== carType: " + carType);
+        System.out.println("=== carName: " + carName);
+        System.out.println("=== carAge: " + carAge);
+        System.out.println("=== articleType: " + articleType);
+        System.out.println("=== sortType: " + sortType);
+        List<ArticleResponseDTO> articleResponseDTO = articleService.getArticle(carType, carName, carAge, articleType, sortType);
+        return ApiResponse.success(SuccessStatus.SEND_ARTICLE_SUCCESS, articleResponseDTO);
     }
 
     @Operation(

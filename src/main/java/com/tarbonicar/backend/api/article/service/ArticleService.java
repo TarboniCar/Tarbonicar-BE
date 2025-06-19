@@ -1,9 +1,9 @@
 package com.tarbonicar.backend.api.article.service;
 
-import com.tarbonicar.backend.api.article.dto.ArticleCreateDTO;
-import com.tarbonicar.backend.api.article.dto.ArticleDetailResponseDTO;
-import com.tarbonicar.backend.api.article.dto.ArticleUpdateDTO;
+import com.tarbonicar.backend.api.article.dto.*;
 import com.tarbonicar.backend.api.article.entity.Article;
+import com.tarbonicar.backend.api.article.entity.ArticleType;
+import com.tarbonicar.backend.api.article.entity.SortType;
 import com.tarbonicar.backend.api.article.repository.ArticleLikeRepository;
 import com.tarbonicar.backend.api.article.repository.ArticleRepository;
 import com.tarbonicar.backend.api.category.entity.CarAge;
@@ -17,6 +17,8 @@ import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -53,7 +55,20 @@ public class ArticleService {
         articleRepository.save(article);
     }
 
-    // 게시글 조회 메서드
+    // 게시글 목록 조회 메서드
+    @Transactional
+    public List<ArticleResponseDTO> getArticle(
+            String carType,
+            List<String> carName,
+            List<Integer> carAge,
+            List<ArticleType> articleType,
+            SortType sortType
+    ) {
+        List<Article> articleList = articleRepository.findByFilters(carType, carName, carAge, articleType, sortType);
+        return articleList.stream().map(ArticleResponseDTO::fromEntity).toList();
+    }
+
+    // 게시글 상세 조회 메서드
     @Transactional
     public ArticleDetailResponseDTO getArticleDetail(Long articleId, Long memberId) {
 

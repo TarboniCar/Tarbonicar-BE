@@ -21,6 +21,7 @@ public enum SuccessStatus {
     DELETE_CARNAME_SUCCESS(HttpStatus.OK,"차량 이름 카테고리 삭제 성공"),
     DELETE_CARTYPE_SUCCESS(HttpStatus.OK,"차량 타입 카테고리 삭제 성공"),
     SEND_IMAGE_UPLOAD_SUCCESS(HttpStatus.OK, "이미지 업로드 성공"),
+    SEND_ARTICLE_SUCCESS(HttpStatus.OK,"게시글 목록 조회 성공"),
     SEND_ARTICLE_DETAIL_SUCCESS(HttpStatus.OK,"게시글 상세 조회 성공"),
     MODIFY_ARTICLE_SUCCESS(HttpStatus.OK,"게시글 수정 성공"),
     DELETE_ARTICLE_SUCCESS(HttpStatus.OK,"게시글 삭제 성공"),
