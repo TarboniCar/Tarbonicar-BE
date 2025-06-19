@@ -20,6 +20,7 @@ public enum SuccessStatus {
     DELETE_CARAGE_SUCCESS(HttpStatus.OK,"차량 연식 카테고리 삭제 성공"),
     DELETE_CARNAME_SUCCESS(HttpStatus.OK,"차량 이름 카테고리 삭제 성공"),
     DELETE_CARTYPE_SUCCESS(HttpStatus.OK,"차량 타입 카테고리 삭제 성공"),
+    SEND_IMAGE_UPLOAD_SUCCESS(HttpStatus.OK, "이미지 업로드 성공"),
 
     /**
      * 201
