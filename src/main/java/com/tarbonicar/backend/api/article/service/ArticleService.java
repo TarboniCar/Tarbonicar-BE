@@ -32,7 +32,7 @@ public class ArticleService {
 
     // 게시글 작성 메서드
     @Transactional
-    public void createArticle(ArticleCreateDTO articleCreateDTO) {
+    public Long createArticle(ArticleCreateDTO articleCreateDTO) {
 
         // 사용자가 존재하지 않을 때 예외처리
         Member member = memberRepository.findById(articleCreateDTO.getMemberId())
@@ -53,7 +53,8 @@ public class ArticleService {
                 .carAge(carAge)
                 .build();
 
-        articleRepository.save(article);
+        Article articleSave = articleRepository.save(article);
+        return articleSave.getId();
     }
 
     // 게시글 목록 조회 메서드
