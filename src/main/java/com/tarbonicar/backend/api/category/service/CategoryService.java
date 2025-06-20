@@ -10,12 +10,14 @@ import com.tarbonicar.backend.api.category.entity.CarType;
 import com.tarbonicar.backend.api.category.repository.CarAgeRepository;
 import com.tarbonicar.backend.api.category.repository.CarNameRepository;
 import com.tarbonicar.backend.api.category.repository.CarTypeRepository;
+import com.tarbonicar.backend.common.exception.BadRequestException;
 import com.tarbonicar.backend.common.exception.NotFoundException;
 import com.tarbonicar.backend.common.response.ErrorStatus;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
@@ -58,6 +60,12 @@ public class CategoryService {
 
         // 차량 연식 저장
         int ageValue = categoryCreateDTO.getCarAge();
+
+        // 이미 해당 차량에 연식이 저장되어있으면 예외처리
+        if (carAgeRepository.existsByCarNameAndCarAge(name, ageValue)){
+            throw new BadRequestException(ErrorStatus.ALREADY_ADD_CARAGE_EXCEPTION.getMessage());
+        }
+
         CarAge age = CarAge.builder()
                 .carAge(ageValue)
                 .carName(name)
@@ -100,7 +108,7 @@ public class CategoryService {
         CarName name = carNameRepository.findByCarName(carName)
                 .orElseThrow(() -> new NotFoundException(ErrorStatus.NOT_FOUND_CARNAME_EXCEPTION.getMessage()));
 
-        return carAgeRepository.findAllByCarName(name).stream()
+        return carAgeRepository.findAllByCarNameOrderByCarAgeDesc(name).stream()
                 .map(age -> new CarAgeResponseDTO(
                         age.getId(),
                         age.getCarAge()
@@ -110,8 +118,7 @@ public class CategoryService {
 
     // [메인, 게시글 리스트 페이지 전용] 차량 연식 조회 메서드
     @Transactional(readOnly = true)
-    public List<CarAgeResponseDTO> getHomeCarAgeCategory(String carTypeParam, String carNameParam
-    ) {
+    public List<CarAgeResponseDTO> getHomeCarAgeCategory(String carTypeParam, List<String> carNameParams) {
         List<CarAge> rawAges;
 
         if ("all".equalsIgnoreCase(carTypeParam)) {
@@ -122,24 +129,28 @@ public class CategoryService {
             CarType type = carTypeRepository.findByCarType(carTypeParam)
                     .orElseThrow(() -> new NotFoundException(ErrorStatus.NOT_FOUND_CARTYPE_EXCEPTION.getMessage()));
 
-            if ("all".equalsIgnoreCase(carNameParam)) {
-                // carName=all → 해당 차종의 모든 CarName → 각 연식 합치기
+            if (carNameParams.isEmpty() ||
+                    carNameParams.stream().anyMatch(n -> "all".equalsIgnoreCase(n))) {
                 List<CarName> names = carNameRepository.findAllByCarType(type);
                 rawAges = names.stream()
                         .flatMap(name -> carAgeRepository.findAllByCarName(name).stream())
                         .collect(Collectors.toList());
             } else {
-                // 특정 차량명 지정 → CarName 조회 → 연식만
-                CarName name = carNameRepository
-                        .findByCarNameAndCarType(carNameParam, type)
-                        .orElseThrow(() -> new NotFoundException(ErrorStatus.NOT_FOUND_CARNAME_EXCEPTION.getMessage()));
-                rawAges = carAgeRepository.findAllByCarName(name);
+                // 특정 차량명이 여러 개 지정된 경우
+                rawAges = carNameParams.stream()
+                        .map(nameStr -> carNameRepository
+                                .findByCarNameAndCarType(nameStr, type)
+                                .orElseThrow(() -> new NotFoundException(
+                                        ErrorStatus.NOT_FOUND_CARNAME_EXCEPTION.getMessage()))
+                        )
+                        .flatMap(carName -> carAgeRepository.findAllByCarName(carName).stream())
+                        .collect(Collectors.toList());
             }
         }
 
         // 중복 연식 제거 + 정렬 + 대표 ID 선택
-        // Map<연식값, CarAge> 으로 묶어서 TreeMap 으로 정렬
-        Map<Integer, CarAge> ageMap = new TreeMap<>();
+        // Map<연식값, CarAge> 으로 묶어서 TreeMap 으로 정렬 -> 연식 최신순으로 반환
+        Map<Integer, CarAge> ageMap = new TreeMap<>(Comparator.reverseOrder());
         for (CarAge age : rawAges) {
             int val = age.getCarAge();
             // 최초로 등장하거나, ID가 더 작은 경우 대표로 저장
