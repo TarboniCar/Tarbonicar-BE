@@ -29,10 +29,10 @@ public class ArticleController {
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "201", description = "게시글 등록 성공")
     })
     @PostMapping
-    public ResponseEntity<ApiResponse<Void>> createArticle(@RequestBody ArticleCreateDTO articleCreateDTO){
+    public ResponseEntity<ApiResponse<Long>> createArticle(@RequestBody ArticleCreateDTO articleCreateDTO){
 
-        articleService.createArticle(articleCreateDTO);
-        return ApiResponse.success_only(SuccessStatus.CREATE_ARTICLE_SUCCESS);
+        Long id = articleService.createArticle(articleCreateDTO);
+        return ApiResponse.success(SuccessStatus.CREATE_ARTICLE_SUCCESS, id);
     }
 
     @Operation(summary = "게시글 목록 조회 API", description = "등록된 게시글 목록을 조회 합니다.")
