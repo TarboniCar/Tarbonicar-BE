@@ -32,11 +32,15 @@ public class OAuthService {
 
     // 인가 코드로 액세스 토큰 요청
     public String getKakaoAccessToken(String code) {
+
+        // 카카오 토큰 요청을 위한 URL 설정
         String tokenUri = "https://kauth.kakao.com/oauth/token";
 
+        // HttpHeaders 설정
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
 
+        // 파라미터 설정
         MultiValueMap<String, String> body = new LinkedMultiValueMap<>();
         body.add("grant_type", "authorization_code");
         body.add("client_id", clientId);
@@ -44,13 +48,16 @@ public class OAuthService {
         body.add("redirect_uri", redirectUri);
         body.add("code", code);
 
+        // HTTP 요청 생성 및 전송
         HttpEntity<?> request = new HttpEntity<>(body, headers);
         ResponseEntity<String> response = restTemplate.postForEntity(tokenUri, request, String.class);
 
+        // 예외처리
         if (!response.getStatusCode().is2xxSuccessful()) {
             throw new BadRequestException(ErrorStatus.KAKAO_TOKEN_REQUEST_FAILED.getMessage());
         }
 
+        // 액세스 토큰 추출
         try {
             Map<String, Object> responseBody = new ObjectMapper().readValue(response.getBody(), Map.class);
             return responseBody.get("access_token").toString();
@@ -61,18 +68,24 @@ public class OAuthService {
 
     // 액세스 토큰으로 사용자 정보 요청
     public KakaoUserInfoDto getKakaoUserInfo(String accessToken) {
+
+        // 사용자 정보 요청 URL
         String userInfoUri = "https://kapi.kakao.com/v2/user/me";
 
+        // HttpHeaders 설정
         HttpHeaders headers = new HttpHeaders();
         headers.setBearerAuth(accessToken);
 
+        // HTTP 요청 생성 및 전송
         HttpEntity<?> request = new HttpEntity<>(headers);
         ResponseEntity<String> response = restTemplate.exchange(userInfoUri, HttpMethod.GET, request, String.class);
 
+        // 예외처리
         if (!response.getStatusCode().is2xxSuccessful()) {
             throw new BadRequestException(ErrorStatus.KAKAO_USERINFO_REQUEST_FAILED.getMessage());
         }
 
+        // 사용자 정보 추출
         try {
             Map<String, Object> result = new ObjectMapper().readValue(response.getBody(), Map.class);
 

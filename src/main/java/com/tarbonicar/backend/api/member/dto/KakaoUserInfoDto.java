@@ -3,7 +3,6 @@ package com.tarbonicar.backend.api.member.dto;
 import lombok.*;
 
 @Getter
-@Setter
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor

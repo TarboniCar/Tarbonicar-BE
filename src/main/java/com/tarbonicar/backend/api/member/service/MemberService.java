@@ -45,6 +45,11 @@ public class MemberService {
     @Transactional
     public Map<String, Object> kakaoLogin(String kakaoAccessToken) {
 
+        // 카카오 액세스 토큰이 null이거나 빈 문자열일 경우 예외 처리
+        if (kakaoAccessToken == null || kakaoAccessToken.isBlank()) {
+            throw new BadRequestException(ErrorStatus.KAKAO_LOGIN_FAILED.getMessage());
+        }
+
         // 카카오 액세스 토큰을 사용해서 사용자 정보 가져오기
         KakaoUserInfoDto userInfo = oAuthService.getKakaoUserInfo(kakaoAccessToken);
 
