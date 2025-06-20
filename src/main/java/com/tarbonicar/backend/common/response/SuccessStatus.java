@@ -24,6 +24,8 @@ public enum SuccessStatus {
     SEND_ARTICLE_DETAIL_SUCCESS(HttpStatus.OK,"게시글 상세 조회 성공"),
     MODIFY_ARTICLE_SUCCESS(HttpStatus.OK,"게시글 수정 성공"),
     DELETE_ARTICLE_SUCCESS(HttpStatus.OK,"게시글 삭제 성공"),
+    SEND_KAKAO_LOGIN_SUCCESS(HttpStatus.OK, "카카오 로그인 성공"),
+    SEND_KAKAO_ACCESS_TOKEN_SUCCESS(HttpStatus.OK, "카카오 액세스 토큰 발급 성공"),
 
     /**
      * 201
