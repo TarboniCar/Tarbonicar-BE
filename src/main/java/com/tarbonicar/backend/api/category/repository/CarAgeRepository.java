@@ -7,5 +7,8 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import java.util.List;
 
 public interface CarAgeRepository extends JpaRepository<CarAge, Long> {
+
     List<CarAge> findAllByCarName(CarName carName);
+    List<CarAge> findAllByCarNameOrderByCarAgeDesc(CarName carName);
+    boolean existsByCarNameAndCarAge(CarName carName, int carAge);
 }

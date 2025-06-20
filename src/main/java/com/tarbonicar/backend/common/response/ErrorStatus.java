@@ -18,6 +18,7 @@ public enum ErrorStatus {
     PASSWORD_MISMATCH_EXCEPTION(HttpStatus.BAD_REQUEST, "비밀번호가 일치하지 않습니다."),
     MISSING_UPLOAD_IMAGE_EXCEPTION(HttpStatus.BAD_REQUEST, "업로드할 이미지가 없습니다."),
     THIS_MEMBER_IS_NOT_WRITER_EXCEPTION(HttpStatus.BAD_REQUEST,"게시글 작성자가 아닙니다."),
+    ALREADY_ADD_CARAGE_EXCEPTION(HttpStatus.BAD_REQUEST, "이미 등록된 차량 연식 입니다."),
 
     /**
      * 401 UNAUTHORIZED

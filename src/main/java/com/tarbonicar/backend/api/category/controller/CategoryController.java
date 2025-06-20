@@ -15,6 +15,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @RestController
 @Tag(name = "Category", description = "카테고리 관련 API입니다.")
@@ -76,9 +77,9 @@ public class CategoryController {
     @ApiResponses({
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "차량 연식 카테고리 조회 성공")})
     @GetMapping("/search/home/carage")
-    public ResponseEntity<ApiResponse<List<CarAgeResponseDTO>>> getHomeCarAgeCategory(@RequestParam String carType, @RequestParam String carName) {
+    public ResponseEntity<ApiResponse<List<CarAgeResponseDTO>>> getHomeCarAgeCategory(@RequestParam String carType, @RequestParam List<String> carName) {
 
-        List<CarAgeResponseDTO> ages = categoryService.getHomeCarAgeCategory(carType.trim(), carName.trim());
+        List<CarAgeResponseDTO> ages = categoryService.getHomeCarAgeCategory(carType.trim(), carName.stream().map(String::trim).collect(Collectors.toList()));
         return ApiResponse.success(SuccessStatus.SEND_CARNAME_CATEGORY_SUCCESS, ages);
     }
 
