@@ -7,6 +7,9 @@ import com.tarbonicar.backend.api.article.entity.Article;
 import com.tarbonicar.backend.api.article.entity.ArticleType;
 import com.tarbonicar.backend.api.article.entity.QArticle;
 import com.tarbonicar.backend.api.article.entity.SortType;
+import com.tarbonicar.backend.api.category.entity.QCarAge;
+import com.tarbonicar.backend.api.category.entity.QCarName;
+import com.tarbonicar.backend.api.category.entity.QCarType;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 
@@ -20,26 +23,26 @@ public class ArticleFilterRepositoryImpl implements ArticleFilterRepository {
     @Override
     public List<Article> findByFilters(String carType, List<String> carNames, List<Integer> carAges, List<ArticleType> articleTypes, SortType sortType) {
         QArticle article = QArticle.article;
+        QCarAge carAge = QCarAge.carAge1;
+        QCarName carName = QCarName.carName1;
+        QCarType carTypeEntity = QCarType.carType1;
 
         BooleanBuilder builder = new BooleanBuilder();
         //builder.and(article.isDeleted.eq(false)); // 삭제 안 된 게시글만
 
         // carType
         if (carType != null && !carType.isEmpty()) {
-            builder.and(article.carAge.isNotNull());
-            builder.and(article.carAge.carName.isNotNull());
-            builder.and(article.carAge.carName.carType.isNotNull());
-            builder.and(article.carAge.carName.carType.carType.eq(carType));
+            builder.and(carTypeEntity.carType.eq(carType));
         }
 
         // carName
         if (carNames != null && !carNames.isEmpty()) {
-            builder.and(article.carAge.carName.carName.in(carNames));
+            builder.and(carName.carName.in(carNames));
         }
 
         // carAge
         if (carAges != null && !carAges.isEmpty()) {
-            builder.and(article.carAge.carAge.in(carAges));
+            builder.and(carAge.carAge.in(carAges));
         }
 
         // articleType
@@ -52,9 +55,9 @@ public class ArticleFilterRepositoryImpl implements ArticleFilterRepository {
 
         return queryFactory
                 .selectFrom(article)
-                .leftJoin(article.carAge).fetchJoin()
-                .leftJoin(article.carAge.carName).fetchJoin()
-                //.leftJoin(article.carAge.carName.carType).fetchJoin()
+                .leftJoin(article.carAge, carAge).fetchJoin()
+                .leftJoin(carAge.carName, carName).fetchJoin()
+                .leftJoin(carName.carType, carTypeEntity).fetchJoin()
                 .leftJoin(article.member).fetchJoin()
                 .where(builder)
                 .orderBy(order)

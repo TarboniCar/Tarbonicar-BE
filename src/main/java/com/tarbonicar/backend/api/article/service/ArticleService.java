@@ -19,6 +19,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -65,7 +66,19 @@ public class ArticleService {
             SortType sortType
     ) {
         List<Article> articleList = articleRepository.findByFilters(carType, carName, carAge, articleType, sortType);
-        return articleList.stream().map(ArticleResponseDTO::fromEntity).toList();
+
+        return articleList.stream().map(article -> new ArticleResponseDTO(
+                article.getId(),
+                article.getTitle(),
+                article.getContent(),
+                article.getLikeCount(),
+                article.getViewCount(),
+                article.getCreatedAt(),
+                false,
+                null,
+                article.getCarAge().getCarName().getCarName(),
+                article.getCarAge().getCarAge()
+        )).collect(Collectors.toList());
     }
 
     // 게시글 상세 조회 메서드
