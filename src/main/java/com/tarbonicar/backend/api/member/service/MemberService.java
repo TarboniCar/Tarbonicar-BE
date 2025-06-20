@@ -1,5 +1,6 @@
 package com.tarbonicar.backend.api.member.service;
 
+import com.tarbonicar.backend.api.member.dto.KakaoUserInfoDto;
 import com.tarbonicar.backend.api.member.dto.MemberSignupRequestDto;
 import com.tarbonicar.backend.api.member.entity.Member;
 import com.tarbonicar.backend.api.member.repository.MemberRepository;
@@ -9,6 +10,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import java.util.HashMap;
+import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
@@ -16,6 +19,7 @@ public class MemberService {
 
     private final MemberRepository memberRepository;
     private final PasswordEncoder passwordEncoder;
+    private final OAuthService oAuthService;
 
     // 이메일 회원가입 메서드
     @Transactional
@@ -36,5 +40,43 @@ public class MemberService {
 
         Member member = requestDto.toEntity(encodedPassword, null);
         memberRepository.save(member);
+    }
+
+    @Transactional
+    public Map<String, Object> kakaoLogin(String kakaoAccessToken) {
+
+        // 카카오 액세스 토큰이 null이거나 빈 문자열일 경우 예외 처리
+        if (kakaoAccessToken == null || kakaoAccessToken.isBlank()) {
+            throw new BadRequestException(ErrorStatus.KAKAO_LOGIN_FAILED.getMessage());
+        }
+
+        // 카카오 액세스 토큰을 사용해서 사용자 정보 가져오기
+        KakaoUserInfoDto userInfo = oAuthService.getKakaoUserInfo(kakaoAccessToken);
+
+        // 사용자 정보 저장
+        Member member = memberRepository.findBySocialId(userInfo.getId())
+                .orElseGet(() -> kakaoRegister(userInfo));  // 없으면 회원가입
+
+        // 로그인 시 응답 데이터 구성
+        Map<String, Object> result = new HashMap<>();
+        result.put("nickname", member.getNickname());
+        result.put("email", member.getEmail());
+        result.put("profileImage", member.getProfileImage());
+        result.put("socialId", member.getSocialId());
+
+        return result;
+    }
+
+    // 새 유저 회원가입 처리
+    private Member kakaoRegister(KakaoUserInfoDto dto) {
+        Member member = Member.builder()
+                .socialId(dto.getId())
+                .email("kakao_" + dto.getId() + "@social.com")
+                .nickname(dto.getNickname())
+                .profileImage(dto.getProfileImage())
+                .socialType("KAKAO")
+                .build();
+
+        return memberRepository.save(member);
     }
 }

@@ -41,7 +41,7 @@ public class MemberSignupRequestDto {
                 .password(encodedPassword)
                 .nickname(nickname)
                 .profileImage(profileImageUrl)
-                .socialType(null)
+                .socialType("NORMAL")
                 .socialId(null)
                 .build();
     }
