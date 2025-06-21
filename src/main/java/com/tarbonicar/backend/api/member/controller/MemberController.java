@@ -1,6 +1,11 @@
 package com.tarbonicar.backend.api.member.controller;
 
+import com.tarbonicar.backend.api.jwt.JwtProvider;
+import com.tarbonicar.backend.api.member.dto.MemberLoginRequestDto;
+import com.tarbonicar.backend.api.member.dto.MemberLoginResponseDto;
 import com.tarbonicar.backend.api.member.dto.MemberSignupRequestDto;
+import com.tarbonicar.backend.api.member.entity.Member;
+import com.tarbonicar.backend.api.member.repository.MemberRepository;
 import com.tarbonicar.backend.api.member.service.MemberService;
 import com.tarbonicar.backend.api.member.service.OAuthService;
 import com.tarbonicar.backend.common.response.ApiResponse;
@@ -11,6 +16,10 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.core.userdetails.User;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
@@ -23,6 +32,9 @@ public class MemberController {
 
     private final MemberService memberService;
     private final OAuthService oAuthService;
+    private final MemberRepository memberRepository;
+    private final JwtProvider jwtProvider;
+    private final PasswordEncoder passwordEncoder;
 
     @Operation(
             summary = "이메일 회원가입 API", description = "회원정보를 받아 사용자를 등록합니다.")
@@ -57,5 +69,24 @@ public class MemberController {
         memberService.kakaoLogin(token);
         return ApiResponse.success_only(SuccessStatus.SEND_KAKAO_LOGIN_SUCCESS);
     }
-}
 
+    @Operation(summary = "로그인 API", description = "이메일로 로그인을 처리합니다.")
+    @PostMapping("/login")
+    public  ResponseEntity<ApiResponse<MemberLoginResponseDto>> login(@RequestBody MemberLoginRequestDto memberLoginRequestDto) {
+        Member member = memberRepository.findByEmail(memberLoginRequestDto.getEmail()).orElseThrow(()-> new UsernameNotFoundException("일치하는 회원 정보 없음"));
+        System.out.println("✅ [login] login() 컨트롤러 진입");
+        if(!passwordEncoder.matches(memberLoginRequestDto.getPassword(),member.getPassword())) {
+            throw new BadCredentialsException("Invalid credentials");
+        }
+        System.out.println("✅ [login] login() 컨트롤러 진입");
+        String accessToken = jwtProvider.generateToken(member.getEmail());
+        String refreshToken= jwtProvider.generateToken(member.getNickname());
+        MemberLoginResponseDto memberLoginResponseDto = new MemberLoginResponseDto(accessToken,refreshToken);
+        return ApiResponse.success(SuccessStatus.SEND_LOGIN_SUCCESS, memberLoginResponseDto);
+    }
+
+    @GetMapping("/test")
+    public String getTest(){
+        return "OK";
+    }
+}
