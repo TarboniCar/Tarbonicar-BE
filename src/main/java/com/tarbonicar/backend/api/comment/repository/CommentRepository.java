@@ -8,5 +8,5 @@ import java.util.List;
 public interface CommentRepository extends JpaRepository<Comment, Long> {
 
     // 해당 게시글의 댓글 조회
-    List<Comment> findAllByArticle_Id(Long articleId);
+    List<Comment> findAllByArticle_IdOrderByCreatedAtDesc(Long articleId);
 }

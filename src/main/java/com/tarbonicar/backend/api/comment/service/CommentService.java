@@ -29,10 +29,10 @@ public class CommentService {
 
     // 댓글 작성 메서드
     @Transactional
-    public void createComment(CommentCreateDTO commentCreateDTO) {
+    public void createComment(CommentCreateDTO commentCreateDTO, String memberId) {
 
         // 사용자가 존재하지 않을 때 예외처리
-        Member member = memberRepository.findById(commentCreateDTO.getMemberId())
+        Member member = memberRepository.findByEmail(memberId)
                 .orElseThrow(() -> new NotFoundException(ErrorStatus.NOT_FOUND_MEMBERID_EXCEPTION.getMessage()));
 
         // 게시글이 존재하지 않을 때 예외처라
@@ -51,10 +51,10 @@ public class CommentService {
 
     // 댓글 목록 조회 메서드
     @Transactional
-    public List<CommentResponseDTO> getComment(Long articleId, Long memberId) {
+    public List<CommentResponseDTO> getComment(Long articleId, String memberId) {
 
         // 댓글 리스트 조회
-        List<Comment> commentList = commentRepository.findAllByArticle_Id(articleId);
+        List<Comment> commentList = commentRepository.findAllByArticle_IdOrderByCreatedAtDesc(articleId);
 
         // 게시글 확인
         if (!articleRepository.existsById(articleId)) {
@@ -65,7 +65,7 @@ public class CommentService {
                 comment.getId(),
                 comment.getContent(),
                 comment.getCreatedAt(),
-                comment.getMember().getId().equals(memberId), // myComment 판별
+                comment.getMember().getEmail().equals(memberId), // myComment 판별
                 comment.isModify(),
                 comment.getMember().getId(),
                 comment.getMember().getNickname(),
@@ -75,14 +75,14 @@ public class CommentService {
 
     // 댓글 수정 메서드
     @Transactional
-    public void modifyComment(CommentUpdateDTO commentUpdateDTO) {
+    public void modifyComment(CommentUpdateDTO commentUpdateDTO, String memberId) {
 
         // 기존 댓글 조회
         Comment comment = commentRepository.findById(commentUpdateDTO.getCommentId())
                 .orElseThrow(() -> new NotFoundException(ErrorStatus.NOT_FOUND_COMMENT_EXCEPTION.getMessage()));
 
         // 작성자 확인 (권한 체크)
-        if (!comment.getMember().getId().equals(commentUpdateDTO.getMemberId())) {
+        if (!comment.getMember().getEmail().equals(memberId)) {
             throw new BadRequestException(ErrorStatus.THIS_MEMBER_IS_NOT_COMMENT_WRITER_EXCEPTION.getMessage());
         }
 
@@ -96,14 +96,14 @@ public class CommentService {
 
     // 댓글 삭제 메서드
     @Transactional
-    public void deleteComment(Long commentId, Long memberId) {
+    public void deleteComment(Long commentId, String memberId) {
 
         // 댓글 조회
         Comment comment = commentRepository.findById(commentId)
                 .orElseThrow(() -> new NotFoundException(ErrorStatus.NOT_FOUND_COMMENT_EXCEPTION.getMessage()));
 
         // 작성자 확인
-        if (!comment.getMember().getId().equals(memberId)) {
+        if (!comment.getMember().getEmail().equals(memberId)) {
             throw new BadRequestException(ErrorStatus.THIS_MEMBER_IS_NOT_COMMENT_WRITER_EXCEPTION.getMessage());
         }
 
