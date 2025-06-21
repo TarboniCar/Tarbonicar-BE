@@ -25,6 +25,9 @@ public enum SuccessStatus {
     SEND_ARTICLE_DETAIL_SUCCESS(HttpStatus.OK,"게시글 상세 조회 성공"),
     MODIFY_ARTICLE_SUCCESS(HttpStatus.OK,"게시글 수정 성공"),
     DELETE_ARTICLE_SUCCESS(HttpStatus.OK,"게시글 삭제 성공"),
+    SEND_COMMENT_SUCCESS(HttpStatus.OK,"댓글 목록 조회 성공"),
+    MODIFY_COMMENT_SUCCESS(HttpStatus.OK,"댓글 수정 성공"),
+    DELETE_COMMENT_SUCCESS(HttpStatus.OK,"댓글 삭제 성공"),
     SEND_KAKAO_LOGIN_SUCCESS(HttpStatus.OK, "카카오 로그인 성공"),
     SEND_KAKAO_ACCESS_TOKEN_SUCCESS(HttpStatus.OK, "카카오 액세스 토큰 발급 성공"),
 
@@ -32,6 +35,7 @@ public enum SuccessStatus {
      * 201
      */
     CREATE_ARTICLE_SUCCESS(HttpStatus.CREATED, "게시글 등록 성공"),
+    CREATE_COMMENT_SUCCESS(HttpStatus.CREATED, "댓글 등록 성공"),
     CREATE_CATEGORY_SUCCESS(HttpStatus.CREATED, "카테고리 등록 성공"),
 
     ;

@@ -35,7 +35,8 @@ public class ArticleController {
         return ApiResponse.success(SuccessStatus.CREATE_ARTICLE_SUCCESS, id);
     }
 
-    @Operation(summary = "게시글 목록 조회 API", description = "등록된 게시글 목록을 조회 합니다.")
+    @Operation(
+            summary = "게시글 목록 조회 API", description = "등록된 게시글 목록을 조회 합니다.")
     @ApiResponses({
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "게시글 목록 조회 성공")
     })

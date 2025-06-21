@@ -66,6 +66,7 @@ public class ArticleService {
             List<ArticleType> articleType,
             SortType sortType
     ) {
+
         List<Article> articleList = articleRepository.findByFilters(carType, carName, carAge, articleType, sortType);
 
         return articleList.stream().map(article -> new ArticleResponseDTO(
