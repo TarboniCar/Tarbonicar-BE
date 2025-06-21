@@ -14,4 +14,6 @@ public interface ArticleFilterRepository {
             List<ArticleType> articleType,
             SortType sortType
     );
+
+    List<Article> findByMemberId(SortType sortType, String memberId);
 }

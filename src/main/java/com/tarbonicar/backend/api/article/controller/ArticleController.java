@@ -11,6 +11,8 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -46,16 +48,29 @@ public class ArticleController {
             @RequestParam(required = false) List<String> carName,
             @RequestParam(required = false) List<Integer> carAge,
             @RequestParam(required = false) List<ArticleType> articleType,
-            @RequestParam(required = false, defaultValue = "RECENT") SortType sortType
+            @RequestParam(required = false, defaultValue = "RECENT") SortType sortType,
+            @AuthenticationPrincipal UserDetails userDetails
     ) {
-        System.out.println("=== carType: " + carType);
-        System.out.println("=== carName: " + carName);
-        System.out.println("=== carAge: " + carAge);
-        System.out.println("=== articleType: " + articleType);
-        System.out.println("=== sortType: " + sortType);
-        List<ArticleResponseDTO> articleResponseDTO = articleService.getArticle(carType, carName, carAge, articleType, sortType);
+
+        List<ArticleResponseDTO> articleResponseDTO = articleService.getArticle(carType, carName, carAge, articleType, sortType, userDetails.getUsername());
         return ApiResponse.success(SuccessStatus.SEND_ARTICLE_SUCCESS, articleResponseDTO);
     }
+
+    @Operation(
+            summary = "내가 작성한 게시글 목록 조회 API", description = "내가 작성한 게시글 목록을 조회 합니다.")
+    @ApiResponses({
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "내가 작성한 게시글 목록 조회 성공")
+    })
+    @GetMapping("/my-list")
+    public ResponseEntity<ApiResponse<List<ArticleResponseDTO>>> getMyArticle(
+            @RequestParam(required = false, defaultValue = "RECENT") SortType sortType,
+            @AuthenticationPrincipal UserDetails userDetails
+    ) {
+
+        List<ArticleResponseDTO> articleResponseDTO = articleService.getMyArticle(sortType, userDetails.getUsername());
+        return ApiResponse.success(SuccessStatus.SEND_ARTICLE_SUCCESS, articleResponseDTO);
+    }
+
 
     @Operation(
             summary = "게시글 상세 조회 API", description = "게시글을 상세 조회 합니다.")

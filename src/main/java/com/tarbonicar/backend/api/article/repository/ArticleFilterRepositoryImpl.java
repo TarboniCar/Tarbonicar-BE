@@ -64,6 +64,27 @@ public class ArticleFilterRepositoryImpl implements ArticleFilterRepository {
                 .fetch();
     }
 
+    @Override
+    public List<Article> findByMemberId(SortType sortType, String memberId) {
+        QArticle article = QArticle.article;
+        QCarAge carAge = QCarAge.carAge1;
+        QCarName carName = QCarName.carName1;
+        QCarType carTypeEntity = QCarType.carType1;
+
+        // 정렬 기준
+        OrderSpecifier<?> order = getSortSpecifier(sortType, article);
+
+        return queryFactory
+                .selectFrom(article)
+                .leftJoin(article.carAge, carAge).fetchJoin()
+                .leftJoin(carAge.carName, carName).fetchJoin()
+                .leftJoin(carName.carType, carTypeEntity).fetchJoin()
+                .leftJoin(article.member).fetchJoin()
+                .where(article.member.email.eq(memberId))   // 여기만 추가
+                .orderBy(order)
+                .fetch();
+    }
+
     private OrderSpecifier<?> getSortSpecifier(SortType sortType, QArticle article) {
         if (sortType == null) return article.createdAt.desc(); // 기본값
 
