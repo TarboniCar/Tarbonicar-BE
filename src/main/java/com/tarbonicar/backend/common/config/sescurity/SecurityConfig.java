@@ -1,5 +1,7 @@
 package com.tarbonicar.backend.common.config.sescurity;
 
+import com.tarbonicar.backend.api.jwt.JwtFilter;
+import com.tarbonicar.backend.api.jwt.JwtProvider;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -12,6 +14,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.HttpStatusEntryPoint;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 
@@ -22,6 +25,10 @@ import static org.springframework.security.config.Customizer.withDefaults;
 
 @Configuration
 public class SecurityConfig {
+    private final JwtProvider jwtProvider;
+    public SecurityConfig(JwtProvider jwtProvider) {
+        this.jwtProvider = jwtProvider;
+    }
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
@@ -56,12 +63,19 @@ public class SecurityConfig {
                         .requestMatchers("/api/v1/member/signup", "/api/v1/member/kakao-accesstoken", "/api/v1/member/kakao-login", "/api/v1/member/token-reissue").permitAll() // 회원가입 인증 허용
                         .requestMatchers("/api/v1/category", "/api/v1/category/search/**", "/api/v1/category/**").permitAll() // 카테고리 관련 인증 허용
                         .requestMatchers("/api/v1/s3/upload-image", "/api/v1/article", "/api/v1/article/**", "/api/v1/comment/**").permitAll() // 이미지 업로드, 게시글 관련 인증 허용 - 추후 허용 해제 예정
+                        .requestMatchers("/api/v1/member/login").permitAll()
                         .anyRequest().authenticated()
                 )
+                .addFilterBefore(new JwtFilter(jwtProvider), UsernamePasswordAuthenticationFilter.class)
                 .exceptionHandling(e -> e
                         .authenticationEntryPoint(new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED)) // 인증 안 됐을 때 401 응답
                 );
 
+
         return http.build();
     }
+
+
+
+
 }
