@@ -64,7 +64,8 @@ public class ArticleService {
             List<String> carName,
             List<Integer> carAge,
             List<ArticleType> articleType,
-            SortType sortType
+            SortType sortType,
+            String memberId
     ) {
 
         List<Article> articleList = articleRepository.findByFilters(carType, carName, carAge, articleType, sortType);
@@ -76,7 +77,27 @@ public class ArticleService {
                 article.getLikeCount(),
                 article.getViewCount(),
                 article.getCreatedAt(),
-                false,
+                false,  // 게시글 좋아요 API JWT 연결 후 변경 => articleLikeRepository.existsByArticle_IdAndMember_Id(article.getId(), memberId),
+                null,
+                article.getCarAge().getCarName().getCarName(),
+                article.getCarAge().getCarAge()
+        )).collect(Collectors.toList());
+    }
+
+    // 내가 작성한 게시글 목록 조회 메서드
+    @Transactional
+    public List<ArticleResponseDTO> getMyArticle(SortType sortType, String memberId) {
+
+        List<Article> articleList = articleRepository.findByMemberId(sortType, memberId);
+
+        return articleList.stream().map(article -> new ArticleResponseDTO(
+                article.getId(),
+                article.getTitle(),
+                article.getContent(),
+                article.getLikeCount(),
+                article.getViewCount(),
+                article.getCreatedAt(),
+                false, // 게시글 좋아요 API JWT 연결 후 변경 => articleLikeRepository.existsByArticle_IdAndMember_Id(article.getId(), memberId),
                 null,
                 article.getCarAge().getCarName().getCarName(),
                 article.getCarAge().getCarAge()
