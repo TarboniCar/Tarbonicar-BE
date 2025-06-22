@@ -15,6 +15,7 @@ public class ArticleDetailResponseDTO {
     private String content;
     private long likeCount;
     private long viewCount;
+    private long commentCount;
     private ArticleType articleType;
     private LocalDateTime createdAt;
 
