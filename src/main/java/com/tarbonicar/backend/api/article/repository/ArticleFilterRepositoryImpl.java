@@ -80,7 +80,7 @@ public class ArticleFilterRepositoryImpl implements ArticleFilterRepository {
                 .leftJoin(carAge.carName, carName).fetchJoin()
                 .leftJoin(carName.carType, carTypeEntity).fetchJoin()
                 .leftJoin(article.member).fetchJoin()
-                .where(article.member.email.eq(memberId))   // 여기만 추가
+                .where(article.member.email.eq(memberId))
                 .orderBy(order)
                 .fetch();
     }

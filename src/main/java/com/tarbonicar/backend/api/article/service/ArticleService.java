@@ -8,6 +8,7 @@ import com.tarbonicar.backend.api.article.repository.ArticleLikeRepository;
 import com.tarbonicar.backend.api.article.repository.ArticleRepository;
 import com.tarbonicar.backend.api.category.entity.CarAge;
 import com.tarbonicar.backend.api.category.repository.CarAgeRepository;
+import com.tarbonicar.backend.api.comment.repository.CommentRepository;
 import com.tarbonicar.backend.api.member.entity.Member;
 import com.tarbonicar.backend.api.member.repository.MemberRepository;
 import com.tarbonicar.backend.common.exception.BadRequestException;
@@ -29,6 +30,7 @@ public class ArticleService {
     private final ArticleRepository articleRepository;
     private final CarAgeRepository carAgeRepository;
     private final MemberRepository memberRepository;
+    private final CommentRepository commentRepository;
 
     // 게시글 작성 메서드
     @Transactional
@@ -76,6 +78,7 @@ public class ArticleService {
                 article.getContent(),
                 article.getLikeCount(),
                 article.getViewCount(),
+                commentRepository.countByArticle_Id(article.getId()),
                 article.getCreatedAt(),
                 false,  // 게시글 좋아요 API JWT 연결 후 변경 => articleLikeRepository.existsByArticle_IdAndMember_Id(article.getId(), memberId),
                 null,
@@ -96,6 +99,7 @@ public class ArticleService {
                 article.getContent(),
                 article.getLikeCount(),
                 article.getViewCount(),
+                commentRepository.countByArticle_Id(article.getId()),
                 article.getCreatedAt(),
                 false, // 게시글 좋아요 API JWT 연결 후 변경 => articleLikeRepository.existsByArticle_IdAndMember_Id(article.getId(), memberId),
                 null,
@@ -118,6 +122,7 @@ public class ArticleService {
         // myArticle / myLike 판별
         boolean myArticle = memberId != null && article.getMember().getId().equals(memberId);
         boolean myLike = memberId != null && articleLikeRepository.existsByArticle_IdAndMember_Id(articleId, memberId);
+        long commentCount = commentRepository.countByArticle_Id(article.getId());
 
         return ArticleDetailResponseDTO.builder()
                 .id(article.getId())
@@ -125,6 +130,7 @@ public class ArticleService {
                 .content(article.getContent())
                 .likeCount(article.getLikeCount())
                 .viewCount(article.getViewCount() + 1) // 메모리상 viewCount는 오래된 값이라 +1 추가
+                .commentCount(commentCount)
                 .articleType(article.getArticleType())
                 .createdAt(article.getCreatedAt())
                 .myArticle(myArticle)
