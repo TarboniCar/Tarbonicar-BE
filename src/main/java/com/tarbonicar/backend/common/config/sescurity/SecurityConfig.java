@@ -1,8 +1,10 @@
 package com.tarbonicar.backend.common.config.sescurity;
 
+
 import com.tarbonicar.backend.api.jwt.JwtFilter;
 import com.tarbonicar.backend.api.jwt.JwtProvider;
 import jakarta.servlet.http.HttpServletRequest;
+import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpStatus;
@@ -21,18 +23,16 @@ import org.springframework.web.cors.CorsConfigurationSource;
 import java.util.Arrays;
 import java.util.Collections;
 
-import static org.springframework.security.config.Customizer.withDefaults;
-
+@RequiredArgsConstructor
 @Configuration
 public class SecurityConfig {
-    private final JwtProvider jwtProvider;
-    public SecurityConfig(JwtProvider jwtProvider) {
-        this.jwtProvider = jwtProvider;
-    }
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
+
+    private final JwtProvider jwtProvider;
+
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
@@ -62,7 +62,7 @@ public class SecurityConfig {
                         .requestMatchers("/h2-console/**", "/swagger-ui/**", "/v3/api-docs/**", "/swagger-resources/**", "/swagger-ui.html", "/webjars/**", "/api-doc").permitAll() // H2, Swagger 인증 허용
                         .requestMatchers("/api/v1/member/signup", "/api/v1/member/kakao-accesstoken", "/api/v1/member/kakao-login", "/api/v1/member/token-reissue").permitAll() // 회원가입 인증 허용
                         .requestMatchers("/api/v1/category", "/api/v1/category/search/**", "/api/v1/category/**").permitAll() // 카테고리 관련 인증 허용
-                        .requestMatchers("/api/v1/s3/upload-image", "/api/v1/article", "/api/v1/article/**", "/api/v1/comment/**").permitAll() // 이미지 업로드, 게시글 관련 인증 허용 - 추후 허용 해제 예정
+                        .requestMatchers("/api/v1/s3/u로그인pload-image", "/api/v1/article", "/api/v1/article/**", "/api/v1/comment/**").permitAll() // 이미지 업로드, 게시글 관련 인증 허용 - 추후 허용 해제 예정
                         .requestMatchers("/api/v1/member/login").permitAll()
                         .anyRequest().authenticated()
                 )

@@ -1,10 +1,9 @@
 package com.tarbonicar.backend.api.member.dto;
 
 
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import com.tarbonicar.backend.api.member.entity.Member;
+import lombok.*;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 
 import java.time.LocalDateTime;
 
@@ -12,7 +11,9 @@ import java.time.LocalDateTime;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
+@Builder
 public class MemberLoginResponseDto {
     private String accessToken;
     private String refreshToken;
+
 }

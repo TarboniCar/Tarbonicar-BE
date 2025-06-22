@@ -1,5 +1,6 @@
 package com.tarbonicar.backend.api.member.entity;
 
+import com.tarbonicar.backend.api.constant.Authority;
 import com.tarbonicar.backend.common.entity.BaseTimeEntity;
 import jakarta.persistence.*;
 import lombok.*;
@@ -24,5 +25,17 @@ public class Member extends BaseTimeEntity {
     private String socialType;
     private String socialId;
     private String refreshToken;
+
+    @Enumerated(EnumType.STRING)
+    private Authority authority;
+
+    @Builder
+    public Member(String nickname, String password, String email, String profileImage, Authority authority) {
+        this.nickname = nickname;
+        this.password = password;
+        this.email = email;
+        this.profileImage = profileImage;
+        this.authority = authority;
+    }
 
 }
