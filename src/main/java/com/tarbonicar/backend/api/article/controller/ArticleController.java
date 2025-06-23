@@ -111,4 +111,15 @@ public class ArticleController {
         articleService.deleteArticle(articleId, userDetails.getUsername());
         return ApiResponse.success_only(SuccessStatus.DELETE_ARTICLE_SUCCESS);
     }
+
+    @Operation(summary = "게시글 좋아요 토글 API", description = "게시글 좋아요 등록/해제를 합니다.")
+    @ApiResponses({
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "좋아요 토글 성공")
+    })
+    @PostMapping("/like/{articleId}")
+    public ResponseEntity<ApiResponse<Void>> likeArticle(@PathVariable Long articleId, @AuthenticationPrincipal UserDetails userDetails){
+
+        articleService.likeArticle(articleId, userDetails.getUsername());
+        return ApiResponse.success_only(SuccessStatus.SEND_ARTICLE_LIKE_SUCCESS);
+    }
 }

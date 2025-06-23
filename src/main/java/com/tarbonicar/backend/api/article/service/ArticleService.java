@@ -2,6 +2,7 @@ package com.tarbonicar.backend.api.article.service;
 
 import com.tarbonicar.backend.api.article.dto.*;
 import com.tarbonicar.backend.api.article.entity.Article;
+import com.tarbonicar.backend.api.article.entity.ArticleLike;
 import com.tarbonicar.backend.api.article.entity.ArticleType;
 import com.tarbonicar.backend.api.article.entity.SortType;
 import com.tarbonicar.backend.api.article.repository.ArticleLikeRepository;
@@ -168,9 +169,7 @@ public class ArticleService {
 
         // 기존 게시글 조회
         Article article = articleRepository.findById(articleUpdateDTO.getArticleId())
-                .orElseThrow(() ->
-                        new NotFoundException(ErrorStatus.NOT_FOUND_ARTICLE_EXCEPTION.getMessage())
-                );
+                .orElseThrow(() -> new NotFoundException(ErrorStatus.NOT_FOUND_ARTICLE_EXCEPTION.getMessage()));
 
         // 작성자 확인 (권한 체크)
         if (!article.getMember().getId().equals(member.getId())) {
@@ -201,9 +200,7 @@ public class ArticleService {
 
         // 게시글 조회
         Article article = articleRepository.findById(articleId)
-                .orElseThrow(() ->
-                        new NotFoundException(ErrorStatus.NOT_FOUND_ARTICLE_EXCEPTION.getMessage())
-                );
+                .orElseThrow(() -> new NotFoundException(ErrorStatus.NOT_FOUND_ARTICLE_EXCEPTION.getMessage()));
 
         // 작성자 확인
         if (!article.getMember().getId().equals(member.getId())) {
@@ -211,5 +208,38 @@ public class ArticleService {
         }
 
         articleRepository.delete(article);
+    }
+
+    // 게시글 좋아요 토글 메서드
+    @Transactional
+    public void likeArticle(Long articleId, String memberEmail){
+
+        // 사용자 정보 조회
+        Member member = memberRepository.findByEmail(memberEmail)
+                .orElseThrow(() -> new NotFoundException(ErrorStatus.NOT_FOUND_MEMBERID_EXCEPTION.getMessage()));
+
+        // 게시글 조회
+        Article article = articleRepository.findById(articleId)
+                .orElseThrow(() -> new NotFoundException(ErrorStatus.NOT_FOUND_ARTICLE_EXCEPTION.getMessage()));
+
+        // 좋아요 상태 체크
+        Optional<ArticleLike> existingLike = articleLikeRepository.findByArticle_IdAndMember_Id(articleId, member.getId());
+
+        // 만약 좋아요를 누른상태면 좋아요 해제
+        if(existingLike.isPresent()) {
+            articleLikeRepository.delete(existingLike.get());
+            articleRepository.decreasementLikeCount(articleId);
+
+        //만약 좋아요를 누르지 않았으면 좋아요 추가
+        }else{
+            ArticleLike articleLike = ArticleLike.builder()
+                    .article(article)
+                    .member(member)
+                    .build();
+
+            articleLikeRepository.save(articleLike);
+            articleRepository.incrementLikeCount(articleId);
+        }
+
     }
 }

@@ -51,7 +51,9 @@ public class CommentController {
             @AuthenticationPrincipal UserDetails userDetails
     ) {
 
-        List<CommentResponseDTO> commentResponseDTO = commentService.getComment(articleId, userDetails.getUsername());
+        String userEmail = (userDetails != null) ? userDetails.getUsername() : null;
+
+        List<CommentResponseDTO> commentResponseDTO = commentService.getComment(articleId, userEmail);
         return ApiResponse.success(SuccessStatus.SEND_COMMENT_SUCCESS, commentResponseDTO);
     }
 
