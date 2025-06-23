@@ -3,13 +3,10 @@ package com.tarbonicar.backend.api.member.dto;
 import com.tarbonicar.backend.api.member.entity.Member;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
+import lombok.*;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Email;
-import lombok.NoArgsConstructor;
 
 @Getter
 @Builder
@@ -35,12 +32,14 @@ public class MemberSignupRequestDto {
     @Size(min = 2, max = 20, message = "닉네임 2-20자 사이로 입력해주세요.")
     private String nickname;
 
-    public Member toEntity(String encodedPassword, String profileImageUrl) {
+    private String profileImage;
+
+    public Member toEntity(String encodedPassword, String imageUrl) {
         return Member.builder()
                 .email(email)
                 .password(encodedPassword)
                 .nickname(nickname)
-                .profileImage(profileImageUrl)
+                .profileImage(profileImage)
                 .socialType("NORMAL")
                 .socialId(null)
                 .build();
