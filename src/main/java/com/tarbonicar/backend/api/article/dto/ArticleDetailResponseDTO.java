@@ -26,6 +26,7 @@ public class ArticleDetailResponseDTO {
     private String nickname;
     private String profileImage;
 
+    private String carType;
     private String carName;
     private int carAge;
 
