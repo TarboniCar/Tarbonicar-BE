@@ -110,6 +110,7 @@ public class MemberService {
     }
 
     public Member getMemberInfo(String email) {
+
         Member member = memberRepository.findByEmail(email).orElseThrow(()-> new NotFoundException(ErrorStatus.NOT_FOUND_MEMBER_EXCEPTION.getMessage()));
         return member;
     }
