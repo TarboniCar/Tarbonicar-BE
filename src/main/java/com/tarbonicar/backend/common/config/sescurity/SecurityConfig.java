@@ -1,8 +1,10 @@
 package com.tarbonicar.backend.common.config.sescurity;
 
+
 import com.tarbonicar.backend.api.jwt.JwtFilter;
 import com.tarbonicar.backend.api.jwt.JwtProvider;
 import jakarta.servlet.http.HttpServletRequest;
+import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpStatus;
@@ -21,18 +23,16 @@ import org.springframework.web.cors.CorsConfigurationSource;
 import java.util.Arrays;
 import java.util.Collections;
 
-import static org.springframework.security.config.Customizer.withDefaults;
-
+@RequiredArgsConstructor
 @Configuration
 public class SecurityConfig {
-    private final JwtProvider jwtProvider;
-    public SecurityConfig(JwtProvider jwtProvider) {
-        this.jwtProvider = jwtProvider;
-    }
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
+
+    private final JwtProvider jwtProvider;
+
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
