@@ -154,6 +154,7 @@ public class ArticleService {
                 .modify(article.isModify())
                 .nickname(article.getMember().getNickname())
                 .profileImage(article.getMember().getProfileImage())
+                .carType(article.getCarAge().getCarName().getCarType().getCarType())
                 .carName(article.getCarAge().getCarName().getCarName())
                 .carAge(article.getCarAge().getCarAge())
                 .build();
