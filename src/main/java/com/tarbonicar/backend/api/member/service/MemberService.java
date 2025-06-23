@@ -8,6 +8,7 @@ import com.tarbonicar.backend.api.member.dto.MemberSignupRequestDto;
 import com.tarbonicar.backend.api.member.entity.Member;
 import com.tarbonicar.backend.api.member.repository.MemberRepository;
 import com.tarbonicar.backend.common.exception.BadRequestException;
+import com.tarbonicar.backend.common.exception.NotFoundException;
 import com.tarbonicar.backend.common.response.ErrorStatus;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -92,11 +93,11 @@ public class MemberService {
 
         // 회원 조회
         Member member = memberRepository.findByEmail(memberLoginRequestDto.getEmail())
-                .orElseThrow(() -> new UsernameNotFoundException("일치하는 회원 정보 없음"));
+                .orElseThrow(() -> new NotFoundException(ErrorStatus.NOT_FOUND_MEMBER_EXCEPTION.getMessage()));
 
         // 비밀번호 일치 확인
         if (!passwordEncoder.matches(memberLoginRequestDto.getPassword(), member.getPassword())) {
-            throw new BadCredentialsException("비밀번호가 일치하지 않습니다.");
+            throw new BadRequestException(ErrorStatus.PASSWORD_MISMATCH_EXCEPTION.getMessage());
         }
         // 인증 객체 생성 (Spring Security용)
         Authentication authentication = memberLoginRequestDto.toAuthentication();
@@ -106,6 +107,12 @@ public class MemberService {
         String refreshToken = jwtProvider.generateRefreshToken(member.getEmail());
 
         return new MemberLoginResponseDto(accessToken, refreshToken);
-    }    
+    }
+
+    public Member getMemberInfo(String email) {
+        Member member = memberRepository.findByEmail(email).orElseThrow(()-> new NotFoundException(ErrorStatus.NOT_FOUND_MEMBER_EXCEPTION.getMessage()));
+        return member;
+    }
+
 
 }
