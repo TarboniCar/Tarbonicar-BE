@@ -73,23 +73,7 @@ public class MemberController {
     @Operation(summary = "로그인 API", description = "이메일로 로그인을 처리합니다.")
     @PostMapping("/login")
     public  ResponseEntity<?> login(@RequestBody MemberLoginRequestDto memberLoginRequestDto) {
-        // 이메일로 회원 조회
-        Member member = memberRepository.findByEmail(memberLoginRequestDto.getEmail())
-                .orElseThrow(() -> new UsernameNotFoundException("일치하는 회원 정보 없음"));
-
-        // 비밀번호 일치 확인
-        if (!passwordEncoder.matches(memberLoginRequestDto.getPassword(), member.getPassword())) {
-            throw new BadCredentialsException("비밀번호가 일치하지 않습니다.");
-        }
-
-        // 인증 객체 생성 (Spring Security용)
-        Authentication authentication = memberLoginRequestDto.toAuthentication();
-
-        // JWT 토큰 발급
-        String accessToken = jwtProvider.generateAccessToken(authentication);
-        String refreshToken = jwtProvider.generateRefreshToken(member.getEmail());
-
-        MemberLoginResponseDto memberLoginResponseDto = new MemberLoginResponseDto(accessToken,refreshToken);
+        MemberLoginResponseDto memberLoginResponseDto = memberService.login(memberLoginRequestDto);
         return ApiResponse.success(SuccessStatus.SEND_LOGIN_SUCCESS, memberLoginResponseDto);
     }
 }
