@@ -1,12 +1,18 @@
 package com.tarbonicar.backend.api.member.service;
 
+import com.tarbonicar.backend.api.jwt.JwtProvider;
 import com.tarbonicar.backend.api.member.dto.KakaoUserInfoDto;
+import com.tarbonicar.backend.api.member.dto.MemberLoginRequestDto;
+import com.tarbonicar.backend.api.member.dto.MemberLoginResponseDto;
 import com.tarbonicar.backend.api.member.dto.MemberSignupRequestDto;
 import com.tarbonicar.backend.api.member.entity.Member;
 import com.tarbonicar.backend.api.member.repository.MemberRepository;
 import com.tarbonicar.backend.common.exception.BadRequestException;
 import com.tarbonicar.backend.common.response.ErrorStatus;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -20,6 +26,7 @@ public class MemberService {
     private final MemberRepository memberRepository;
     private final PasswordEncoder passwordEncoder;
     private final OAuthService oAuthService;
+    private final JwtProvider jwtProvider;
 
     // 이메일 회원가입 메서드
     @Transactional
@@ -79,4 +86,26 @@ public class MemberService {
 
         return memberRepository.save(member);
     }
+
+    @Transactional
+    public MemberLoginResponseDto login(MemberLoginRequestDto memberLoginRequestDto) {
+
+        // 회원 조회
+        Member member = memberRepository.findByEmail(memberLoginRequestDto.getEmail())
+                .orElseThrow(() -> new UsernameNotFoundException("일치하는 회원 정보 없음"));
+
+        // 비밀번호 일치 확인
+        if (!passwordEncoder.matches(memberLoginRequestDto.getPassword(), member.getPassword())) {
+            throw new BadCredentialsException("비밀번호가 일치하지 않습니다.");
+        }
+        // 인증 객체 생성 (Spring Security용)
+        Authentication authentication = memberLoginRequestDto.toAuthentication();
+
+        // JWT 토큰 발급
+        String accessToken = jwtProvider.generateAccessToken(authentication);
+        String refreshToken = jwtProvider.generateRefreshToken(member.getEmail());
+
+        return new MemberLoginResponseDto(accessToken, refreshToken);
+    }    
+
 }

@@ -1,89 +1,108 @@
 package com.tarbonicar.backend.api.jwt;
 
+import com.tarbonicar.backend.api.member.dto.MemberLoginResponseDto;
+import com.tarbonicar.backend.api.member.entity.Member;
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.ExpiredJwtException;
+import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.SignatureAlgorithm;
+import io.jsonwebtoken.security.Keys;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.userdetails.User;
 import org.springframework.stereotype.Component;
 
-import javax.crypto.Mac;
-import javax.crypto.spec.SecretKeySpec;
-import java.util.Base64;
+import java.security.Key;
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.Date;
+import java.util.stream.Collectors;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 
 @Component
+@Slf4j
 public class JwtProvider {
-
-    @Value("${jwt.secret}")
-    private String SECRET_KEY;
-
-    @Value("${jwt.access")
-
-    private static final long ACCESS_TOKEN_EXPIRE_TIME = 1000L * 60 * 60;
-
-    public String generateToken(String nickname) {
-        Date now = new Date();
-        Date expiryDate = new Date(now.getTime() + ACCESS_TOKEN_EXPIRE_TIME);
-        String headerJson = "{\"alg\":\"HS256\",\"typ\":\"JWT\"}";
-        String header = Base64.getUrlEncoder().withoutPadding()
-                .encodeToString(headerJson.getBytes());
-        long exp = expiryDate.getTime() / 1000;
-        String payloadJson = String.format("{\"sub\":\"%s\",\"exp\":%d}", nickname, exp);
-        String payload = Base64.getUrlEncoder().withoutPadding()
-                .encodeToString(payloadJson.getBytes());
-
-        String message = header + "." + payload;
-
-        String signature = sign(message, SECRET_KEY);
-        System.out.println("✅ [generateToken] 발급된 토큰: \" + token");
-        return  message + "." + signature;
+    private static final String AUTHORITIES_KEY = "auth"; // 권한 정보를 저장하는 키
+    private final Key key; // JWT 서명에 사용할 비밀키
+    // 비밀키를 기반으로 키 객체 초기화
+    // 주의점 : @Value 어노테이션은 springframework의 어노테이션이다.
+    public JwtProvider(@Value("${jwt.secret}") String secretKey) {
+        // 암호화
+        this.key = Keys.hmacShaKeyFor(secretKey.getBytes());
     }
 
-    private String sign(String data, String secret) {
-        try{
-            SecretKeySpec hmacKey = new SecretKeySpec(secret.getBytes(), "HmacSHA256");
+    // 토큰 생성 메서드
+    public String generateAccessToken(Authentication authentication) {
+        // 인증 객체에서 권한 정보 추출
+        String authorities = authentication.getAuthorities().stream()
+                .map(GrantedAuthority::getAuthority)
+                .collect(Collectors.joining(","));
 
-            Mac mac = Mac.getInstance("HmacSHA256");
-            mac.init(hmacKey);
+        // 현재 시간과 토큰 만료 시간 계산
+        long now = (new Date()).getTime();
+        Date accessTokenExpiresIn = new Date(now + 30 * 60 * 1000); // 30분
 
-            byte[] sigBytes = mac.doFinal(data.getBytes());
+        // Access Token 생성
+        String accessToken =
+                Jwts.builder()
+                        .setSubject(authentication.getName()) // 사용자명 설정, 이메일이 들어 있음
+                        .claim(AUTHORITIES_KEY, "ROLE_USER")  // 권한 정보 저장, 일단 ROLE_USER
+                        .setExpiration(accessTokenExpiresIn)  // 만료 시간 설정
+                        .signWith(key, SignatureAlgorithm.HS512) // 서명 방식 설정
+                        .compact();
 
-            return Base64.getUrlEncoder().withoutPadding().encodeToString(sigBytes);
-        }
-        catch (Exception e) {
-            throw new RuntimeException("JWT 서명 생성 실패",e);
-        }
+        // 결과를 DTO로 반환
+        return accessToken;
     }
 
+    // RefreshToken 생성 메서드
+    public String generateRefreshToken(String email) {
+        long now = System.currentTimeMillis();
+        Date refreshTokenExpiresIn = new Date(now + 7 * 24 * 60 * 60 * 1000L); // 7일
+
+        return Jwts.builder()
+                .setSubject(email) // 주체: 사용자 이메일
+                .setExpiration(refreshTokenExpiresIn)
+                .signWith(key, SignatureAlgorithm.HS512)
+                .compact();
+    }
+
+    // 토큰에서 인증 객체 생성
+    public Authentication getAuthentication(String token) {
+        Claims claims = parseClaims(token);
+
+        // 권한 정보 추출
+        Collection<? extends GrantedAuthority> authorities =
+                Arrays.stream(claims.get(AUTHORITIES_KEY).toString().split(","))
+                        .map(SimpleGrantedAuthority::new)
+                        .collect(Collectors.toList());
+
+        // 인증 객체 생성 후 반환
+        User principal = new User(claims.getSubject(), "", authorities);
+        return new UsernamePasswordAuthenticationToken(principal, token, authorities);
+    }
+
+    // 토큰 유효성 검증
     public boolean validateToken(String token) {
         try {
-            String[] parts = token.split("\\.");
-            if (parts.length != 3) return false;
-
-            String header = parts[0];
-            String payload = parts[1];
-            String signature = parts[2];
-
-            String message = header + "." + payload;
-            String expectedSig = sign(message, SECRET_KEY);
-            if (!expectedSig.equals(signature)) return false;
-
-            // ✅ 만료 시간 검증 추가
-            String decodedPayload = new String(Base64.getUrlDecoder().decode(payload));
-            long exp = Long.parseLong(decodedPayload.split("\"exp\":")[1].replaceAll("[^0-9]", ""));
-            long now = System.currentTimeMillis() / 1000;
-            return now < exp;
-
+            Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(token);
+            return true;
         } catch (Exception e) {
-            return false;
+            log.info("JWT 검증 실패: {}", e.getMessage());
+        }
+        return false;
+    }
+
+    // 토큰의 Claims(내용) 추출
+    private Claims parseClaims(String token) {
+        try {
+            return Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(token).getBody();
+        } catch (ExpiredJwtException e) {
+            return e.getClaims();
         }
     }
-
-
-    public String getSubject(String token) {
-        String payload = new String(Base64.getUrlDecoder().decode(token.split("\\.")[1]));
-        // payload: {"sub":"nickname","exp":1718912234}
-        String sub = payload.split("\"sub\":\"")[1].split("\"")[0];
-        return sub;
-    }
-
-
 
 }

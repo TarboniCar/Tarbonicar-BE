@@ -17,7 +17,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.BadCredentialsException;
-import org.springframework.security.core.userdetails.User;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
@@ -72,21 +72,8 @@ public class MemberController {
 
     @Operation(summary = "로그인 API", description = "이메일로 로그인을 처리합니다.")
     @PostMapping("/login")
-    public  ResponseEntity<ApiResponse<MemberLoginResponseDto>> login(@RequestBody MemberLoginRequestDto memberLoginRequestDto) {
-        Member member = memberRepository.findByEmail(memberLoginRequestDto.getEmail()).orElseThrow(()-> new UsernameNotFoundException("일치하는 회원 정보 없음"));
-        System.out.println("✅ [login] login() 컨트롤러 진입");
-        if(!passwordEncoder.matches(memberLoginRequestDto.getPassword(),member.getPassword())) {
-            throw new BadCredentialsException("Invalid credentials");
-        }
-        System.out.println("✅ [login] login() 컨트롤러 진입");
-        String accessToken = jwtProvider.generateToken(member.getEmail());
-        String refreshToken= jwtProvider.generateToken(member.getNickname());
-        MemberLoginResponseDto memberLoginResponseDto = new MemberLoginResponseDto(accessToken,refreshToken);
+    public  ResponseEntity<?> login(@RequestBody MemberLoginRequestDto memberLoginRequestDto) {
+        MemberLoginResponseDto memberLoginResponseDto = memberService.login(memberLoginRequestDto);
         return ApiResponse.success(SuccessStatus.SEND_LOGIN_SUCCESS, memberLoginResponseDto);
-    }
-
-    @GetMapping("/test")
-    public String getTest(){
-        return "OK";
     }
 }
