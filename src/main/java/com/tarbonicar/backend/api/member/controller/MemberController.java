@@ -66,8 +66,8 @@ public class MemberController {
     @PostMapping("/kakao-login")
     public ResponseEntity<?> login(@RequestBody Map<String, String> body) {
         String token = body.get("accessToken");
-        memberService.kakaoLogin(token);
-        return ApiResponse.success_only(SuccessStatus.SEND_KAKAO_LOGIN_SUCCESS);
+        Map<String, Object> result = memberService.kakaoLogin(token);
+        return ApiResponse.success(SuccessStatus.SEND_KAKAO_LOGIN_SUCCESS, result);
     }
 
     @Operation(summary = "로그인 API", description = "이메일로 로그인을 처리합니다.")

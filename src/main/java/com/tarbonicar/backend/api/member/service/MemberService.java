@@ -6,6 +6,7 @@ import com.tarbonicar.backend.api.member.entity.Member;
 import com.tarbonicar.backend.api.member.repository.MemberRepository;
 import com.tarbonicar.backend.common.exception.BadRequestException;
 import com.tarbonicar.backend.common.response.ErrorStatus;
+import com.tarbonicar.backend.api.jwt.JwtProvider;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -20,6 +21,7 @@ public class MemberService {
     private final MemberRepository memberRepository;
     private final PasswordEncoder passwordEncoder;
     private final OAuthService oAuthService;
+    private final JwtProvider jwtProvider;
 
     // 이메일 회원가입 메서드
     @Transactional
@@ -57,12 +59,14 @@ public class MemberService {
         Member member = memberRepository.findBySocialId(userInfo.getId())
                 .orElseGet(() -> kakaoRegister(userInfo));  // 없으면 회원가입
 
+        // JWT 토큰 생성
+        String accessToken = jwtProvider.generateToken(member.getEmail());
+        String refreshToken = jwtProvider.generateToken(member.getNickname());
+
         // 로그인 시 응답 데이터 구성
         Map<String, Object> result = new HashMap<>();
-        result.put("nickname", member.getNickname());
-        result.put("email", member.getEmail());
-        result.put("profileImage", member.getProfileImage());
-        result.put("socialId", member.getSocialId());
+        result.put("accessToken", accessToken);
+        result.put("refreshToken", refreshToken);
 
         return result;
     }
