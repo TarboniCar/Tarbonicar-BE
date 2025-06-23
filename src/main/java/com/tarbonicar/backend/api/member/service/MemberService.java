@@ -48,8 +48,9 @@ public class MemberService {
 
         // 패스워드 암호화
         String encodedPassword = passwordEncoder.encode(requestDto.getPassword());
+        String imageUrl = requestDto.getProfileImage();
 
-        Member member = requestDto.toEntity(encodedPassword, null);
+        Member member = requestDto.toEntity(encodedPassword, imageUrl);
         memberRepository.save(member);
     }
 
