@@ -12,12 +12,14 @@ import com.tarbonicar.backend.common.response.ErrorStatus;
 import com.tarbonicar.backend.api.jwt.JwtProvider;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 @Service
@@ -65,9 +67,15 @@ public class MemberService {
         Member member = memberRepository.findBySocialId(userInfo.getId())
                 .orElseGet(() -> kakaoRegister(userInfo));  // 없으면 회원가입
 
-        // JWT 토큰 생성
-        String accessToken = jwtProvider.generateToken(member.getEmail());
-        String refreshToken = jwtProvider.generateToken(member.getNickname());
+        // 인증 객체 생성 (비밀번호 없이 Social 인증 사용자용)
+        Authentication authentication = new UsernamePasswordAuthenticationToken(
+                member.getEmail(), null,
+                List.of(() -> "ROLE_USER")
+        );
+
+        // JWT 발급
+        String accessToken = jwtProvider.generateAccessToken(authentication);
+        String refreshToken = jwtProvider.generateRefreshToken(member.getEmail());
 
         // 로그인 시 응답 데이터 구성
         Map<String, Object> result = new HashMap<>();
