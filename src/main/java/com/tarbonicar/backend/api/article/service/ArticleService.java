@@ -14,16 +14,18 @@ import com.tarbonicar.backend.api.member.repository.MemberRepository;
 import com.tarbonicar.backend.common.exception.BadRequestException;
 import com.tarbonicar.backend.common.exception.NotFoundException;
 import com.tarbonicar.backend.common.response.ErrorStatus;
-import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class ArticleService {
 
     private final ArticleLikeRepository articleLikeRepository;
@@ -34,10 +36,10 @@ public class ArticleService {
 
     // 게시글 작성 메서드
     @Transactional
-    public Long createArticle(ArticleCreateDTO articleCreateDTO) {
+    public Long createArticle(ArticleCreateDTO articleCreateDTO, String memberEmail) {
 
         // 사용자가 존재하지 않을 때 예외처리
-        Member member = memberRepository.findById(articleCreateDTO.getMemberId())
+        Member member = memberRepository.findByEmail(memberEmail)
                 .orElseThrow(()-> new NotFoundException(ErrorStatus.NOT_FOUND_MEMBERID_EXCEPTION.getMessage()));
 
         // 카테고리(차량 연식)이 존재하지 않을 때 예외처리
@@ -67,7 +69,7 @@ public class ArticleService {
             List<Integer> carAge,
             List<ArticleType> articleType,
             SortType sortType,
-            String memberId
+            String memberEmail
     ) {
 
         List<Article> articleList = articleRepository.findByFilters(carType, carName, carAge, articleType, sortType);
@@ -110,7 +112,7 @@ public class ArticleService {
 
     // 게시글 상세 조회 메서드
     @Transactional
-    public ArticleDetailResponseDTO getArticleDetail(Long articleId, Long memberId) {
+    public ArticleDetailResponseDTO getArticleDetail(Long articleId, String memberEmail) {
 
         // 게시글 조회
         Article article = articleRepository.findById(articleId)
@@ -119,10 +121,23 @@ public class ArticleService {
         // 조회수 1 증가
         articleRepository.incrementViewCount(articleId);
 
-        // myArticle / myLike 판별
-        boolean myArticle = memberId != null && article.getMember().getId().equals(memberId);
-        boolean myLike = memberId != null && articleLikeRepository.existsByArticle_IdAndMember_Id(articleId, memberId);
-        long commentCount = commentRepository.countByArticle_Id(article.getId());
+        // 이메일이 null이 아니면 회원 조회
+        Long userId = null;
+        if (memberEmail != null && !memberEmail.isBlank()) {
+            Optional<Member> opt = memberRepository.findByEmail(memberEmail.trim());
+            if (opt.isPresent()) {
+                userId = opt.get().getId();
+            }
+        }
+
+        // userId가 null이면 myArticle/myLike는 모두 false
+        boolean myArticle = (userId != null)
+                && article.getMember().getId().equals(userId);
+        boolean myLike = (userId != null)
+                && articleLikeRepository
+                .existsByArticle_IdAndMember_Id(articleId, userId);
+
+        long commentCount = commentRepository.countByArticle_Id(articleId);
 
         return ArticleDetailResponseDTO.builder()
                 .id(article.getId())
@@ -145,7 +160,11 @@ public class ArticleService {
 
     // 게시글 수정 메서드
     @Transactional
-    public void modifyArticle(ArticleUpdateDTO articleUpdateDTO) {
+    public void modifyArticle(ArticleUpdateDTO articleUpdateDTO, String memberEmail) {
+
+        // 사용자 정보 조회
+        Member member = memberRepository.findByEmail(memberEmail)
+                .orElseThrow(() -> new NotFoundException(ErrorStatus.NOT_FOUND_MEMBERID_EXCEPTION.getMessage()));
 
         // 기존 게시글 조회
         Article article = articleRepository.findById(articleUpdateDTO.getArticleId())
@@ -154,7 +173,7 @@ public class ArticleService {
                 );
 
         // 작성자 확인 (권한 체크)
-        if (!article.getMember().getId().equals(articleUpdateDTO.getMemberId())) {
+        if (!article.getMember().getId().equals(member.getId())) {
             throw new BadRequestException(ErrorStatus.THIS_MEMBER_IS_NOT_WRITER_EXCEPTION.getMessage());
         }
 
@@ -174,7 +193,11 @@ public class ArticleService {
 
     // 게시글 삭제 메서드
     @Transactional
-    public void deleteArticle(Long articleId, Long memberId) {
+    public void deleteArticle(Long articleId, String memberEmail) {
+
+        // 사용자 정보 조회
+        Member member = memberRepository.findByEmail(memberEmail)
+                .orElseThrow(() -> new NotFoundException(ErrorStatus.NOT_FOUND_MEMBERID_EXCEPTION.getMessage()));
 
         // 게시글 조회
         Article article = articleRepository.findById(articleId)
@@ -183,7 +206,7 @@ public class ArticleService {
                 );
 
         // 작성자 확인
-        if (!article.getMember().getId().equals(memberId)) {
+        if (!article.getMember().getId().equals(member.getId())) {
             throw new BadRequestException(ErrorStatus.THIS_MEMBER_IS_NOT_WRITER_EXCEPTION.getMessage());
         }
 
