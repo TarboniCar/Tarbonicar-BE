@@ -7,6 +7,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
@@ -60,10 +61,10 @@ public class SecurityConfig {
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)) // 세션 사용 안함 (JWT 대비용)
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/h2-console/**", "/swagger-ui/**", "/v3/api-docs/**", "/swagger-resources/**", "/swagger-ui.html", "/webjars/**", "/api-doc").permitAll() // H2, Swagger 인증 허용
-                        .requestMatchers("/api/v1/member/signup", "/api/v1/member/kakao-accesstoken", "/api/v1/member/kakao-login", "/api/v1/member/token-reissue").permitAll() // 회원가입 인증 허용
+                        .requestMatchers("/api/v1/member/signup", "/api/v1/member/kakao-accesstoken", "/api/v1/member/kakao-login", "/api/v1/member/token-reissue", "/api/v1/member/login").permitAll() // 회원가입, 로그인 인증 허용
                         .requestMatchers("/api/v1/category", "/api/v1/category/search/**", "/api/v1/category/**").permitAll() // 카테고리 관련 인증 허용
-                        .requestMatchers("/api/v1/s3/upload-image", "/api/v1/article", "/api/v1/article/**", "/api/v1/comment/**").permitAll() // 이미지 업로드, 게시글 관련 인증 허용 - 추후 허용 해제 예정
-                        .requestMatchers("/api/v1/member/login").permitAll()
+                        .requestMatchers("/api/v1/s3/upload-image").permitAll() // 이미지 업로드 인증 허용
+                        .requestMatchers(HttpMethod.GET, "/api/v1/article", "/api/v1/article/list", "/api/v1/comment").permitAll() // 게시글, 댓글 조회 인증 허용
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(new JwtFilter(jwtProvider), UsernamePasswordAuthenticationFilter.class)

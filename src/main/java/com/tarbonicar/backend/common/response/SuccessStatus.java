@@ -31,6 +31,7 @@ public enum SuccessStatus {
     SEND_KAKAO_LOGIN_SUCCESS(HttpStatus.OK, "카카오 로그인 성공"),
     SEND_KAKAO_ACCESS_TOKEN_SUCCESS(HttpStatus.OK, "카카오 액세스 토큰 발급 성공"),
     SEND_LOGIN_SUCCESS(HttpStatus.OK, "로그인 성공"),
+    SEND_ARTICLE_LIKE_SUCCESS(HttpStatus.OK,"게시글 좋아요 성공"),
 
     /**
      * 201
