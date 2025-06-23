@@ -3,6 +3,7 @@ package com.tarbonicar.backend.api.member.controller;
 import com.tarbonicar.backend.api.jwt.JwtProvider;
 import com.tarbonicar.backend.api.member.dto.MemberLoginRequestDto;
 import com.tarbonicar.backend.api.member.dto.MemberLoginResponseDto;
+import com.tarbonicar.backend.api.member.dto.MemberResponseDto;
 import com.tarbonicar.backend.api.member.dto.MemberSignupRequestDto;
 import com.tarbonicar.backend.api.member.entity.Member;
 import com.tarbonicar.backend.api.member.repository.MemberRepository;
@@ -18,6 +19,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
@@ -76,4 +79,14 @@ public class MemberController {
         MemberLoginResponseDto memberLoginResponseDto = memberService.login(memberLoginRequestDto);
         return ApiResponse.success(SuccessStatus.SEND_LOGIN_SUCCESS, memberLoginResponseDto);
     }
+
+    @Operation(summary = "사용자 정보 조회 API", description = "사용자 정보를 조회합니다.")
+    @GetMapping("/user-info")
+    public ResponseEntity<?> getMemberInfo(@AuthenticationPrincipal User principal) {
+
+        Member member = memberService.getMemberInfo(principal.getUsername());
+        MemberResponseDto memberResponseDto = MemberResponseDto.of(member);
+        return  ApiResponse.success(SuccessStatus.SEND_LOGIN_SUCCESS, memberResponseDto);
+    }
+
 }
