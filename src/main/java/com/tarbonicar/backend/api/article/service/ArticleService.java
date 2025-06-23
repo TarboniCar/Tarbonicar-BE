@@ -207,6 +207,13 @@ public class ArticleService {
             throw new BadRequestException(ErrorStatus.THIS_MEMBER_IS_NOT_WRITER_EXCEPTION.getMessage());
         }
 
+        // 좋아요 삭제
+        articleLikeRepository.deleteByArticleId(articleId);
+
+        // 댓글 삭제
+        commentRepository.deleteByArticleId(articleId);
+
+        // 게시글 삭제
         articleRepository.delete(article);
     }
 
