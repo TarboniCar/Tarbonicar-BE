@@ -31,9 +31,9 @@ public class ArticleController {
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "201", description = "게시글 등록 성공")
     })
     @PostMapping
-    public ResponseEntity<ApiResponse<Long>> createArticle(@RequestBody ArticleCreateDTO articleCreateDTO){
+    public ResponseEntity<ApiResponse<Long>> createArticle(@RequestBody ArticleCreateDTO articleCreateDTO, @AuthenticationPrincipal UserDetails userDetails){
 
-        Long id = articleService.createArticle(articleCreateDTO);
+        Long id = articleService.createArticle(articleCreateDTO, userDetails.getUsername());
         return ApiResponse.success(SuccessStatus.CREATE_ARTICLE_SUCCESS, id);
     }
 
@@ -52,7 +52,9 @@ public class ArticleController {
             @AuthenticationPrincipal UserDetails userDetails
     ) {
 
-        List<ArticleResponseDTO> articleResponseDTO = articleService.getArticle(carType, carName, carAge, articleType, sortType, userDetails.getUsername());
+        String userEmail = (userDetails != null) ? userDetails.getUsername() : null;
+
+        List<ArticleResponseDTO> articleResponseDTO = articleService.getArticle(carType, carName, carAge, articleType, sortType, userEmail);
         return ApiResponse.success(SuccessStatus.SEND_ARTICLE_SUCCESS, articleResponseDTO);
     }
 
@@ -78,9 +80,11 @@ public class ArticleController {
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "게시글 상세 조회 성공")
     })
     @GetMapping
-    public ResponseEntity<ApiResponse<ArticleDetailResponseDTO>> getArticleDetail(@RequestParam Long articleId, Long memberId /* memberId는 JWT 완료 후 변경 할 예정 */) {
+    public ResponseEntity<ApiResponse<ArticleDetailResponseDTO>> getArticleDetail(@RequestParam Long articleId, @AuthenticationPrincipal UserDetails userDetails) {
 
-        ArticleDetailResponseDTO articleDetailResponseDTO = articleService.getArticleDetail(articleId, memberId);
+        String userEmail = (userDetails != null) ? userDetails.getUsername() : null;
+
+        ArticleDetailResponseDTO articleDetailResponseDTO = articleService.getArticleDetail(articleId, userEmail);
         return ApiResponse.success(SuccessStatus.SEND_ARTICLE_DETAIL_SUCCESS, articleDetailResponseDTO);
     }
 
@@ -90,9 +94,9 @@ public class ArticleController {
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "게시글 수정 성공")
     })
     @PutMapping
-    public ResponseEntity<ApiResponse<Void>> modifyArticle(@RequestBody ArticleUpdateDTO articleUpdateDTO) {
+    public ResponseEntity<ApiResponse<Void>> modifyArticle(@RequestBody ArticleUpdateDTO articleUpdateDTO, @AuthenticationPrincipal UserDetails userDetails) {
 
-        articleService.modifyArticle(articleUpdateDTO);
+        articleService.modifyArticle(articleUpdateDTO, userDetails.getUsername());
         return ApiResponse.success_only(SuccessStatus.MODIFY_ARTICLE_SUCCESS);
     }
 
@@ -101,10 +105,10 @@ public class ArticleController {
     @ApiResponses({
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "게시글 삭제 성공")
     })
-    @DeleteMapping("/{articleId}/{memberId}")
-    public ResponseEntity<ApiResponse<Void>> deleteArticle(@PathVariable Long articleId, @PathVariable Long memberId) {
+    @DeleteMapping("/{articleId}")
+    public ResponseEntity<ApiResponse<Void>> deleteArticle(@PathVariable Long articleId, @AuthenticationPrincipal UserDetails userDetails) {
 
-        articleService.deleteArticle(articleId, memberId);
+        articleService.deleteArticle(articleId, userDetails.getUsername());
         return ApiResponse.success_only(SuccessStatus.DELETE_ARTICLE_SUCCESS);
     }
 }
