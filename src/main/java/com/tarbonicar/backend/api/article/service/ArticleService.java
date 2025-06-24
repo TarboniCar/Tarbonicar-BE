@@ -75,6 +75,13 @@ public class ArticleService {
 
         List<Article> articleList = articleRepository.findByFilters(carType, carName, carAge, articleType, sortType);
 
+        // 이메일이 null이 아니면 회원 조회
+        Long userId;
+        if (memberEmail != null && !memberEmail.isBlank()) {
+            Optional<Member> opt = memberRepository.findByEmail(memberEmail.trim());
+            userId = opt.map(Member::getId).orElse(null);
+        } else userId = null;
+
         return articleList.stream().map(article -> new ArticleResponseDTO(
                 article.getId(),
                 article.getTitle(),
@@ -83,7 +90,7 @@ public class ArticleService {
                 article.getViewCount(),
                 commentRepository.countByArticle_Id(article.getId()),
                 article.getCreatedAt(),
-                false,  // 게시글 좋아요 API JWT 연결 후 변경 => articleLikeRepository.existsByArticle_IdAndMember_Id(article.getId(), memberId),
+                (userId != null) && articleLikeRepository.existsByArticle_IdAndMember_Id(article.getId(), userId),
                 null,
                 article.getCarAge().getCarName().getCarName(),
                 article.getCarAge().getCarAge()
@@ -92,9 +99,16 @@ public class ArticleService {
 
     // 내가 작성한 게시글 목록 조회 메서드
     @Transactional
-    public List<ArticleResponseDTO> getMyArticle(SortType sortType, String memberId) {
+    public List<ArticleResponseDTO> getMyArticle(SortType sortType, String memberEmail) {
 
-        List<Article> articleList = articleRepository.findByMemberId(sortType, memberId);
+        List<Article> articleList = articleRepository.findByMemberId(sortType, memberEmail);
+
+        // 이메일이 null이 아니면 회원 조회
+        Long userId;
+        if (memberEmail != null && !memberEmail.isBlank()) {
+            Optional<Member> opt = memberRepository.findByEmail(memberEmail.trim());
+            userId = opt.map(Member::getId).orElse(null);
+        } else userId = null;
 
         return articleList.stream().map(article -> new ArticleResponseDTO(
                 article.getId(),
@@ -104,7 +118,7 @@ public class ArticleService {
                 article.getViewCount(),
                 commentRepository.countByArticle_Id(article.getId()),
                 article.getCreatedAt(),
-                false, // 게시글 좋아요 API JWT 연결 후 변경 => articleLikeRepository.existsByArticle_IdAndMember_Id(article.getId(), memberId),
+                (userId != null) && articleLikeRepository.existsByArticle_IdAndMember_Id(article.getId(), userId),
                 null,
                 article.getCarAge().getCarName().getCarName(),
                 article.getCarAge().getCarAge()
