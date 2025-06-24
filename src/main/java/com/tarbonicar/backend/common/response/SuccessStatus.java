@@ -33,6 +33,9 @@ public enum SuccessStatus {
     SEND_LOGIN_SUCCESS(HttpStatus.OK, "로그인 성공"),
     SEND_ARTICLE_LIKE_SUCCESS(HttpStatus.OK,"게시글 좋아요 성공"),
     CHECK_EMAIL_SUCCESS(HttpStatus.OK, "이메일 중복 확인 성공"),
+    SEND_PASSWORD_RESET_CODE_SUCCESS(HttpStatus.OK, "비밀번호 초기화 링크 전송 성공"),
+    SEND_PASSWORD_RESET_CODE_VERIFY_SUCCESS(HttpStatus.OK,"비밀번호 초기화 인증코드 검증 성공"),
+    SEND_PASSWORD_SUCCESS(HttpStatus.OK,"비밀번호 초기화 성공"),
 
     /**
      * 201
