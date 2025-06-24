@@ -14,6 +14,8 @@ import com.tarbonicar.backend.common.exception.NotFoundException;
 import com.tarbonicar.backend.common.response.ErrorStatus;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -51,17 +53,17 @@ public class CommentService {
 
     // 댓글 목록 조회 메서드
     @Transactional
-    public List<CommentResponseDTO> getComment(Long articleId, String memberId) {
+    public Page<CommentResponseDTO> getComment(Long articleId, String memberId, Pageable pageable) {
 
         // 댓글 리스트 조회
-        List<Comment> commentList = commentRepository.findAllByArticle_IdOrderByCreatedAtDesc(articleId);
+        Page<Comment> commentList = commentRepository.findAllByArticle_IdOrderByCreatedAtDesc(articleId, pageable);
 
         // 게시글 확인
         if (!articleRepository.existsById(articleId)) {
             throw new BadRequestException(ErrorStatus.NOT_FOUND_ARTICLE_EXCEPTION.getMessage());
         }
 
-        return commentList.stream().map(comment -> new CommentResponseDTO(
+        return commentList.map(comment -> new CommentResponseDTO(
                 comment.getId(),
                 comment.getContent(),
                 comment.getCreatedAt(),
@@ -70,7 +72,7 @@ public class CommentService {
                 comment.getMember().getId(),
                 comment.getMember().getNickname(),
                 comment.getMember().getProfileImage()
-        )).collect(Collectors.toList());
+        ));
     }
 
     // 댓글 수정 메서드
