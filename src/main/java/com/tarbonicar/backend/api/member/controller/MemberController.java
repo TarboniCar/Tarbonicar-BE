@@ -93,19 +93,30 @@ public class MemberController {
     // 마이페이지 닉네임 변경
     @Operation(summary = "닉네임 변경 API", description = "사용자의 닉네임을 수정합니다.")
     @PutMapping("/nickname")
-    public ResponseEntity<ApiResponse<Void>> updateNickname(@RequestBody NicknameUpdateRequestDto request) {
-        String email = getCurrentUserEmail();
-        memberService.updateNickname(email, request.getNickname());
-        return ApiResponse.success_only(SuccessStatus.UPDATE_NICKNAME_SUCCESS);
+    public ResponseEntity<ApiResponse<Void>> updateNickname(@RequestBody NicknameUpdateRequestDto requestDto) {
+        String newNickname = requestDto.getNickname();
+        // JWT에서 인증된 사용자 이메일 추출
+        String userName = SecurityContextHolder.getContext().getAuthentication().getName();
+        // 닉네임 변경 서비스 호출
+        memberService.updateNickname(userName, newNickname);
+
+        // 디버깅용 로그 출력
+        System.out.println("🔧 닉네임 변경 요청 들어옴");
+        System.out.println("📨 유저네임: " + userName);
+        System.out.println("📝 변경할 닉네임: " + newNickname);
+
+        return ApiResponse.success(SuccessStatus.UPDATE_NICKNAME_SUCCESS, null);
     }
+
 
     // 마이페이지 비밀번호 변경
     @Operation(summary = "비밀번호 변경 API", description = "사용자의 비밀번호를 변경합니다.")
     @PutMapping("/password")
-    public ResponseEntity<ApiResponse<Void>> updatePassword(@RequestBody PasswordUpdateRequestDto request) {
-        String email = getCurrentUserEmail();
-        memberService.updatePassword(email, request);
-        return ApiResponse.success_only(SuccessStatus.UPDATE_PASSWORD_SUCCESS);
+    public ResponseEntity<ApiResponse<Void>> updatePassword(
+            @RequestBody @Valid PasswordUpdateRequestDto requestDto) {
+        String userEmail = SecurityContextHolder.getContext().getAuthentication().getName();
+        memberService.updatePassword(userEmail, requestDto);
+        return ApiResponse.success(SuccessStatus.UPDATE_PASSWORD_SUCCESS, null);
     }
 
     @Operation(summary = "프로필 이미지 업로드 API", description = "파일을 업로드하고 S3 URL을 반환합니다.")

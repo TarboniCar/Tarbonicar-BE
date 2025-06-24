@@ -65,6 +65,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/v1/category", "/api/v1/category/search/**", "/api/v1/category/**").permitAll() // 카테고리 관련 인증 허용
                         .requestMatchers("/api/v1/s3/upload-image").permitAll() // 이미지 업로드 인증 허용
                         .requestMatchers(HttpMethod.GET, "/api/v1/article", "/api/v1/article/list", "/api/v1/comment").permitAll() // 게시글, 댓글 조회 인증 허용
+                        .requestMatchers("/api/v1/member/nickname").authenticated()
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(new JwtFilter(jwtProvider), UsernamePasswordAuthenticationFilter.class)
