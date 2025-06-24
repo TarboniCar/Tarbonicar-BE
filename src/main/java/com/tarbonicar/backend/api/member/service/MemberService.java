@@ -127,5 +127,9 @@ public class MemberService {
         return member;
     }
 
+    public boolean isEmailDuplicate(String email) {
+
+        return memberRepository.existsByEmail(email.trim());
+    }
 
 }

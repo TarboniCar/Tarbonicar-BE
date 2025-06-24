@@ -89,4 +89,11 @@ public class MemberController {
         return  ApiResponse.success(SuccessStatus.SEND_LOGIN_SUCCESS, memberResponseDto);
     }
 
+    @Operation(summary = "이메일 중복 확인 API", description = "입력한 이메일이 이미 가입된 이메일인지 확인합니다.")
+    @GetMapping("/email-check")
+    public ResponseEntity<ApiResponse<Boolean>> checkEmailDuplicate(@RequestParam String email) {
+        boolean isDuplicate = memberService.isEmailDuplicate(email);
+        return ApiResponse.success(SuccessStatus.CHECK_EMAIL_SUCCESS, isDuplicate);
+    }
+
 }
