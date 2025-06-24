@@ -32,6 +32,10 @@ public enum SuccessStatus {
     SEND_KAKAO_ACCESS_TOKEN_SUCCESS(HttpStatus.OK, "카카오 액세스 토큰 발급 성공"),
     SEND_LOGIN_SUCCESS(HttpStatus.OK, "로그인 성공"),
     SEND_ARTICLE_LIKE_SUCCESS(HttpStatus.OK,"게시글 좋아요 성공"),
+    UPDATE_NICKNAME_SUCCESS(HttpStatus.OK, "닉네임 수정 성공"),
+    UPDATE_PASSWORD_SUCCESS(HttpStatus.OK, "비밀번호 수정 성공"),
+    UPDATE_PROFILE_IMAGE_SUCCESS(HttpStatus.OK, "프로필 이미지 수정 성공"),
+    DELETE_MEMBER_SUCCESS(HttpStatus.OK, "회원 탈퇴 성공"),
 
     /**
      * 201

@@ -43,6 +43,7 @@ public enum ErrorStatus {
     NOT_FOUND_MEMBERID_EXCEPTION(HttpStatus.NOT_FOUND,"존재하지 않는 사용자 입니다."),
     NOT_FOUND_ARTICLE_EXCEPTION(HttpStatus.NOT_FOUND,"존재하지 않는 게시글 입니다."),
     NOT_FOUND_COMMENT_EXCEPTION(HttpStatus.NOT_FOUND,"존재하지 않는 댓글 입니다."),
+    MEMBER_NOT_FOUND_EXCEPTION(HttpStatus.NOT_FOUND, "존재하지 않는 사용자입니다."),
 
     /**
      * 500 SERVER_ERROR

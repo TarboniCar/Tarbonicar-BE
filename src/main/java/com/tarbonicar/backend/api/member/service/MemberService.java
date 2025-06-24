@@ -1,10 +1,8 @@
 package com.tarbonicar.backend.api.member.service;
 
+import com.tarbonicar.backend.api.aws.s3.service.S3Service;
 import com.tarbonicar.backend.api.jwt.JwtProvider;
-import com.tarbonicar.backend.api.member.dto.KakaoUserInfoDto;
-import com.tarbonicar.backend.api.member.dto.MemberLoginRequestDto;
-import com.tarbonicar.backend.api.member.dto.MemberLoginResponseDto;
-import com.tarbonicar.backend.api.member.dto.MemberSignupRequestDto;
+import com.tarbonicar.backend.api.member.dto.*;
 import com.tarbonicar.backend.api.member.entity.Member;
 import com.tarbonicar.backend.api.member.repository.MemberRepository;
 import com.tarbonicar.backend.common.exception.BadRequestException;
@@ -19,6 +17,9 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -31,6 +32,7 @@ public class MemberService {
     private final PasswordEncoder passwordEncoder;
     private final OAuthService oAuthService;
     private final JwtProvider jwtProvider;
+    private final S3Service s3Service;
 
     // 이메일 회원가입 메서드
     @Transactional
@@ -124,6 +126,56 @@ public class MemberService {
 
         Member member = memberRepository.findByEmail(email).orElseThrow(()-> new NotFoundException(ErrorStatus.NOT_FOUND_MEMBER_EXCEPTION.getMessage()));
         return member;
+    }
+
+    // 닉네임 변경
+    @Transactional
+    public void updateNickname(String email, String nickname) {
+        Member member = memberRepository.findByEmail(email)
+                .orElseThrow(() -> new BadRequestException(ErrorStatus.MEMBER_NOT_FOUND_EXCEPTION.getMessage()));
+        member.setNickname(nickname);
+    }
+
+    // 비밀번호 변경
+    @Transactional
+    public void updatePassword(String email, PasswordUpdateRequestDto request) {
+        if (!request.getPassword().equals(request.getConfirmPassword())) {
+            throw new BadRequestException(ErrorStatus.PASSWORD_MISMATCH_EXCEPTION.getMessage());
+        }
+
+        Member member = memberRepository.findByEmail(email)
+                .orElseThrow(() -> new BadRequestException(ErrorStatus.MEMBER_NOT_FOUND_EXCEPTION.getMessage()));
+
+        String encodedPassword = passwordEncoder.encode(request.getPassword());
+        member.setPassword(encodedPassword);
+    }
+
+    // 프로필 이미지 변경
+    @Transactional
+    public String updateProfileImage(String email, MultipartFile file) {
+        if (file == null || file.isEmpty()) {
+            throw new BadRequestException("파일이 비어 있습니다.");
+        }
+
+        Member member = memberRepository.findByEmail(email)
+                .orElseThrow(() -> new BadRequestException("회원 정보를 찾을 수 없습니다."));
+
+        try {
+            String imageUrl = s3Service.uploadImage(file); // 이 메서드가 실제 S3 업로드
+            member.setProfileImage(imageUrl);
+            return imageUrl;
+        } catch (IOException e) {
+            throw new RuntimeException("이미지 업로드 실패", e);
+        }
+    }
+
+    // 회원 탈퇴
+    @Transactional
+    public void deleteMember(String email) {
+        Member member = memberRepository.findByEmail(email)
+                .orElseThrow(() -> new BadRequestException(ErrorStatus.MEMBER_NOT_FOUND_EXCEPTION.getMessage()));
+
+        memberRepository.delete(member);
     }
 
 

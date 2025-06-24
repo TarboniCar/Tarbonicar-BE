@@ -38,4 +38,18 @@ public class Member extends BaseTimeEntity {
         this.authority = authority;
     }
 
+    public void setNickname(String nickname) {
+        this.nickname = nickname;
+    }
+
+    // 비밀번호 변경
+    public void setPassword(String password) {
+        this.password = password;
+    }
+
+    // 프로필 이미지 변경
+    public void setProfileImage(String profileImage) {
+        this.profileImage = profileImage;
+    }
+
 }

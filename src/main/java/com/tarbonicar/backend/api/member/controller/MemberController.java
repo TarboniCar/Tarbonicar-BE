@@ -1,14 +1,12 @@
 package com.tarbonicar.backend.api.member.controller;
 
 import com.tarbonicar.backend.api.jwt.JwtProvider;
-import com.tarbonicar.backend.api.member.dto.MemberLoginRequestDto;
-import com.tarbonicar.backend.api.member.dto.MemberLoginResponseDto;
-import com.tarbonicar.backend.api.member.dto.MemberResponseDto;
-import com.tarbonicar.backend.api.member.dto.MemberSignupRequestDto;
+import com.tarbonicar.backend.api.member.dto.*;
 import com.tarbonicar.backend.api.member.entity.Member;
 import com.tarbonicar.backend.api.member.repository.MemberRepository;
 import com.tarbonicar.backend.api.member.service.MemberService;
 import com.tarbonicar.backend.api.member.service.OAuthService;
+import com.tarbonicar.backend.common.exception.BadRequestException;
 import com.tarbonicar.backend.common.response.ApiResponse;
 import com.tarbonicar.backend.common.response.SuccessStatus;
 import io.swagger.v3.oas.annotations.Operation;
@@ -16,14 +14,17 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.Map;
 
@@ -88,5 +89,61 @@ public class MemberController {
         MemberResponseDto memberResponseDto = MemberResponseDto.of(member);
         return  ApiResponse.success(SuccessStatus.SEND_LOGIN_SUCCESS, memberResponseDto);
     }
+
+    // 마이페이지 닉네임 변경
+    @Operation(summary = "닉네임 변경 API", description = "사용자의 닉네임을 수정합니다.")
+    @PutMapping("/nickname")
+    public ResponseEntity<ApiResponse<Void>> updateNickname(@RequestBody NicknameUpdateRequestDto request) {
+        String email = getCurrentUserEmail();
+        memberService.updateNickname(email, request.getNickname());
+        return ApiResponse.success_only(SuccessStatus.UPDATE_NICKNAME_SUCCESS);
+    }
+
+    // 마이페이지 비밀번호 변경
+    @Operation(summary = "비밀번호 변경 API", description = "사용자의 비밀번호를 변경합니다.")
+    @PutMapping("/password")
+    public ResponseEntity<ApiResponse<Void>> updatePassword(@RequestBody PasswordUpdateRequestDto request) {
+        String email = getCurrentUserEmail();
+        memberService.updatePassword(email, request);
+        return ApiResponse.success_only(SuccessStatus.UPDATE_PASSWORD_SUCCESS);
+    }
+
+    @Operation(summary = "프로필 이미지 업로드 API", description = "파일을 업로드하고 S3 URL을 반환합니다.")
+    @PostMapping(value = "/profile-image", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<ApiResponse<Map<String, String>>> updateProfileImage(
+            @RequestPart("file") MultipartFile file
+    ) {
+        String email = getCurrentUserEmail(); // 또는 임의로 "test@example.com"
+        String imageUrl = memberService.updateProfileImage(email, file);
+
+        return ApiResponse.success(SuccessStatus.UPDATE_PROFILE_IMAGE_SUCCESS, Map.of("imageUrl", imageUrl));
+    }
+
+    @Operation(summary = "회원 탈퇴 API", description = "현재 로그인한 회원을 탈퇴 처리합니다.")
+    @DeleteMapping("/delete")
+    public
+    ResponseEntity<ApiResponse<Void>> deleteMember() {
+        String email = getCurrentUserEmail(); // 여기서 SecurityContext에서 추출
+        memberService.deleteMember(email);
+        return ApiResponse.success_only(SuccessStatus.DELETE_MEMBER_SUCCESS);
+    }
+
+
+    // 현재 로그인된 사용자의 email 추출
+    private String getCurrentUserEmail() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        return authentication.getName(); // JWT 인증 시 이메일이 principal로 저장되어 있어야 함
+//        return "test2@example.com";
+    }
+
+    @Operation(summary = "회원 정보 확인", description = "테스트용으로 현재 사용자 정보 반환")
+    @GetMapping("/info")
+    public ResponseEntity<Member> getMemberInfo() {
+        String email = getCurrentUserEmail(); // 하드코딩된 이메일 사용
+        Member member = memberRepository.findByEmail(email)
+                .orElseThrow(() -> new BadRequestException("사용자 없음"));
+        return ResponseEntity.ok(member);
+    }
+
 
 }
