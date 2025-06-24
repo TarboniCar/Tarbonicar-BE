@@ -11,6 +11,9 @@ import com.tarbonicar.backend.api.category.entity.QCarAge;
 import com.tarbonicar.backend.api.category.entity.QCarName;
 import com.tarbonicar.backend.api.category.entity.QCarType;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -21,14 +24,20 @@ public class ArticleFilterRepositoryImpl implements ArticleFilterRepository {
     private final JPAQueryFactory queryFactory;
 
     @Override
-    public List<Article> findByFilters(String carType, List<String> carNames, List<Integer> carAges, List<ArticleType> articleTypes, SortType sortType) {
+    public Page<Article> findByFilters(
+            String carType,
+            List<String> carNames,
+            List<Integer> carAges,
+            List<ArticleType> articleTypes,
+            SortType sortType,
+            Pageable pageable
+    ) {
         QArticle article = QArticle.article;
         QCarAge carAge = QCarAge.carAge1;
         QCarName carName = QCarName.carName1;
         QCarType carTypeEntity = QCarType.carType1;
 
         BooleanBuilder builder = new BooleanBuilder();
-        //builder.and(article.isDeleted.eq(false)); // 삭제 안 된 게시글만
 
         // carType
         if (carType != null && !carType.isEmpty()) {
@@ -53,7 +62,8 @@ public class ArticleFilterRepositoryImpl implements ArticleFilterRepository {
         // 정렬 조건 처리
         OrderSpecifier<?> order = getSortSpecifier(sortType, article);
 
-        return queryFactory
+        // 페이징 처라
+        List<Article> result = queryFactory
                 .selectFrom(article)
                 .leftJoin(article.carAge, carAge).fetchJoin()
                 .leftJoin(carAge.carName, carName).fetchJoin()
@@ -61,11 +71,28 @@ public class ArticleFilterRepositoryImpl implements ArticleFilterRepository {
                 .leftJoin(article.member).fetchJoin()
                 .where(builder)
                 .orderBy(order)
+                .offset(pageable.getOffset())
+                .limit(pageable.getPageSize())
                 .fetch();
+
+        long total = queryFactory
+                .selectFrom(article)
+                .leftJoin(article.carAge, carAge)
+                .leftJoin(carAge.carName, carName)
+                .leftJoin(carName.carType, carTypeEntity)
+                .leftJoin(article.member)
+                .where(builder)
+                .fetchCount();
+
+        return new PageImpl<>(result, pageable, total);
     }
 
     @Override
-    public List<Article> findByMemberId(SortType sortType, String memberId) {
+    public Page<Article> findByMemberId(
+            SortType sortType,
+            Pageable pageable,
+            String memberId
+    ) {
         QArticle article = QArticle.article;
         QCarAge carAge = QCarAge.carAge1;
         QCarName carName = QCarName.carName1;
@@ -74,7 +101,8 @@ public class ArticleFilterRepositoryImpl implements ArticleFilterRepository {
         // 정렬 기준
         OrderSpecifier<?> order = getSortSpecifier(sortType, article);
 
-        return queryFactory
+        // 페이징 처라
+        List<Article> result = queryFactory
                 .selectFrom(article)
                 .leftJoin(article.carAge, carAge).fetchJoin()
                 .leftJoin(carAge.carName, carName).fetchJoin()
@@ -82,7 +110,16 @@ public class ArticleFilterRepositoryImpl implements ArticleFilterRepository {
                 .leftJoin(article.member).fetchJoin()
                 .where(article.member.email.eq(memberId))
                 .orderBy(order)
+                .offset(pageable.getOffset())
+                .limit(pageable.getPageSize())
                 .fetch();
+
+        long total = queryFactory
+                .selectFrom(article)
+                .where(article.member.email.eq(memberId))
+                .fetchCount();
+
+        return new PageImpl<>(result, pageable, total);
     }
 
     private OrderSpecifier<?> getSortSpecifier(SortType sortType, QArticle article) {
