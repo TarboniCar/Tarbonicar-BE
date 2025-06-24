@@ -10,6 +10,9 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -43,18 +46,21 @@ public class ArticleController {
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "게시글 목록 조회 성공")
     })
     @GetMapping("/list")
-    public ResponseEntity<ApiResponse<List<ArticleResponseDTO>>> getArticle(
+    public ResponseEntity<ApiResponse<Page<ArticleResponseDTO>>> getArticle(
             @RequestParam(required = false) String carType,
             @RequestParam(required = false) List<String> carName,
             @RequestParam(required = false) List<Integer> carAge,
             @RequestParam(required = false) List<ArticleType> articleType,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size,
             @RequestParam(required = false, defaultValue = "RECENT") SortType sortType,
             @AuthenticationPrincipal UserDetails userDetails
     ) {
 
         String userEmail = (userDetails != null) ? userDetails.getUsername() : null;
 
-        List<ArticleResponseDTO> articleResponseDTO = articleService.getArticle(carType, carName, carAge, articleType, sortType, userEmail);
+        PageRequest pageRequest = PageRequest.of(page, size);
+        Page<ArticleResponseDTO> articleResponseDTO = articleService.getArticle(carType, carName, carAge, articleType, sortType, pageRequest, userEmail);
         return ApiResponse.success(SuccessStatus.SEND_ARTICLE_SUCCESS, articleResponseDTO);
     }
 
@@ -64,12 +70,15 @@ public class ArticleController {
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "내가 작성한 게시글 목록 조회 성공")
     })
     @GetMapping("/my-list")
-    public ResponseEntity<ApiResponse<List<ArticleResponseDTO>>> getMyArticle(
+    public ResponseEntity<ApiResponse<Page<ArticleResponseDTO>>> getMyArticle(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size,
             @RequestParam(required = false, defaultValue = "RECENT") SortType sortType,
             @AuthenticationPrincipal UserDetails userDetails
     ) {
 
-        List<ArticleResponseDTO> articleResponseDTO = articleService.getMyArticle(sortType, userDetails.getUsername());
+        PageRequest pageRequest = PageRequest.of(page, size);
+        Page<ArticleResponseDTO> articleResponseDTO = articleService.getMyArticle(sortType, pageRequest, userDetails.getUsername());
         return ApiResponse.success(SuccessStatus.SEND_ARTICLE_SUCCESS, articleResponseDTO);
     }
 
