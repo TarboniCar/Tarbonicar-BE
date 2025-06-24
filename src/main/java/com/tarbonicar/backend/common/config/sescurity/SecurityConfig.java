@@ -46,7 +46,8 @@ public class SecurityConfig {
                     public CorsConfiguration getCorsConfiguration(HttpServletRequest request) {
                         CorsConfiguration config = new CorsConfiguration();
                         config.setAllowedOrigins(Arrays.asList(
-                                "http://localhost:5173"
+                                "http://localhost:5173",
+                                "https://www.tarbonicar.kro.kr"
                         ));
                         config.setAllowedMethods(Collections.singletonList("*"));
                         config.setAllowCredentials(true);
