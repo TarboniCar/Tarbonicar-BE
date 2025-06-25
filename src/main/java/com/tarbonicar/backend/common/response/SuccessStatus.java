@@ -37,6 +37,10 @@ public enum SuccessStatus {
     UPDATE_PASSWORD_SUCCESS(HttpStatus.OK, "비밀번호 수정 성공"),
     UPDATE_PROFILE_IMAGE_SUCCESS(HttpStatus.OK, "프로필 이미지 수정 성공"),
     DELETE_MEMBER_SUCCESS(HttpStatus.OK, "회원 탈퇴 성공"),
+    SEND_PASSWORD_RESET_CODE_SUCCESS(HttpStatus.OK, "비밀번호 초기화 링크 전송 성공"),
+    SEND_PASSWORD_RESET_CODE_VERIFY_SUCCESS(HttpStatus.OK,"비밀번호 초기화 인증코드 검증 성공"),
+    SEND_PASSWORD_SUCCESS(HttpStatus.OK,"비밀번호 초기화 성공"),
+    SEND_TOKEN_REISSUE_SUCCESS(HttpStatus.OK, "토큰 재발급 성공"),
 
     /**
      * 201

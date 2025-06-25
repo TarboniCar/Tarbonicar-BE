@@ -46,7 +46,9 @@ public class SecurityConfig {
                     public CorsConfiguration getCorsConfiguration(HttpServletRequest request) {
                         CorsConfiguration config = new CorsConfiguration();
                         config.setAllowedOrigins(Arrays.asList(
-                                "http://localhost:5173"
+                                "http://localhost:5173",
+                                "https://www.tarbonicar.kro.kr",
+                                "https://www.tarbonicar.kro.kr:81"
                         ));
                         config.setAllowedMethods(Collections.singletonList("*"));
                         config.setAllowCredentials(true);
@@ -61,11 +63,12 @@ public class SecurityConfig {
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)) // 세션 사용 안함 (JWT 대비용)
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/h2-console/**", "/swagger-ui/**", "/v3/api-docs/**", "/swagger-resources/**", "/swagger-ui.html", "/webjars/**", "/api-doc").permitAll() // H2, Swagger 인증 허용
-                        .requestMatchers("/api/v1/member/signup", "/api/v1/member/kakao-accesstoken", "/api/v1/member/kakao-login", "/api/v1/member/token-reissue", "/api/v1/member/login").permitAll() // 회원가입, 로그인 인증 허용
+                        .requestMatchers("/api/v1/member/signup", "/api/v1/member/reissue", "/api/v1/member/kakao-accesstoken", "/api/v1/member/kakao-login", "/api/v1/member/token-reissue", "/api/v1/member/login", "/api/v1/member/email-check").permitAll() // 회원가입, 로그인 인증 허용
                         .requestMatchers("/api/v1/category", "/api/v1/category/search/**", "/api/v1/category/**").permitAll() // 카테고리 관련 인증 허용
                         .requestMatchers("/api/v1/s3/upload-image").permitAll() // 이미지 업로드 인증 허용
                         .requestMatchers(HttpMethod.GET, "/api/v1/article", "/api/v1/article/list", "/api/v1/comment").permitAll() // 게시글, 댓글 조회 인증 허용
                         .requestMatchers("/api/v1/member/nickname").authenticated()
+                        .requestMatchers("/api/v1/password-reset/email-request", "/api/v1/password-reset/email-confirm", "/api/v1/password-reset/password-reset").permitAll() // 비밀번호 초기화 인증 허용
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(new JwtFilter(jwtProvider), UsernamePasswordAuthenticationFilter.class)
@@ -73,11 +76,7 @@ public class SecurityConfig {
                         .authenticationEntryPoint(new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED)) // 인증 안 됐을 때 401 응답
                 );
 
-
         return http.build();
     }
-
-
-
 
 }

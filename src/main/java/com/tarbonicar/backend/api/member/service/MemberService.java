@@ -120,6 +120,8 @@ public class MemberService {
         String accessToken = jwtProvider.generateAccessToken(authentication);
         String refreshToken = jwtProvider.generateRefreshToken(member.getEmail());
 
+        member.updateRefreshtoken(refreshToken);
+
         return new MemberLoginResponseDto(accessToken, refreshToken);
     }
 
@@ -133,6 +135,7 @@ public class MemberService {
 
         return memberRepository.existsByEmail(email.trim());
     }
+
     // 닉네임 변경
     @Transactional
     public void updateNickname(String email, String nickname) {
@@ -183,5 +186,31 @@ public class MemberService {
         memberRepository.delete(member);
     }
 
+    // 토큰 
+    public TokenResponseDto reissueToken(TokenRequestDto tokenRequestDto){
+
+        String refreshToken = tokenRequestDto.getRefreshToken();
+
+        if(!jwtProvider.validateToken(refreshToken)) {
+            throw new BadCredentialsException("유효하지 않은 RefreshToken");
+        }
+
+        Member member = memberRepository.findByRefreshToken(refreshToken)
+                .orElseThrow(() -> new BadRequestException("유효하지 않은 리프레시"));
+
+        Authentication authentication = toAuthentication(member.getEmail(), member.getPassword());
+
+        String newAccessToken = jwtProvider.generateAccessToken(authentication);
+        String newRefreshToken = jwtProvider.generateRefreshToken(member.getEmail());
+
+        member.updateRefreshtoken(newRefreshToken);
+
+        return new TokenResponseDto(newAccessToken,newRefreshToken);
+
+    }
+
+    public UsernamePasswordAuthenticationToken toAuthentication(String email, String password) {
+        return new UsernamePasswordAuthenticationToken(email, password);
+    }
 
 }

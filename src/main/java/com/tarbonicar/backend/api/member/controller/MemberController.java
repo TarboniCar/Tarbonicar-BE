@@ -159,4 +159,11 @@ public class MemberController {
     }
 
 
+    @Operation(summary = "토큰 재발급", description = "refreshToken을 이용해서 accessToken 재발급")
+    @PostMapping("/reissue")
+    public ResponseEntity<ApiResponse<TokenResponseDto>> reissue(@RequestBody TokenRequestDto tokenRequestDto){
+
+        TokenResponseDto tokenResponseDto = memberService.reissueToken(tokenRequestDto);
+        return ApiResponse.success(SuccessStatus.SEND_TOKEN_REISSUE_SUCCESS, tokenResponseDto);
+    }
 }

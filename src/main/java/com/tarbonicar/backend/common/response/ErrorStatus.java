@@ -25,6 +25,9 @@ public enum ErrorStatus {
     THIS_MEMBER_IS_NOT_WRITER_EXCEPTION(HttpStatus.BAD_REQUEST,"게시글 작성자가 아닙니다."),
     THIS_MEMBER_IS_NOT_COMMENT_WRITER_EXCEPTION(HttpStatus.BAD_REQUEST,"댓글 작성자가 아닙니다."),
     ALREADY_ADD_CARAGE_EXCEPTION(HttpStatus.BAD_REQUEST, "이미 등록된 차량 연식 입니다."),
+    INVALID_PASSWORD_RESET_CODE_EXCEPTION(HttpStatus.BAD_REQUEST,"올바르지 않은 인증 코드 입니다."),
+    EXPIRED_PASSWORD_RESET_CODE_EXCEPTION(HttpStatus.BAD_REQUEST,"이미 만료된 인증 코드 입니다."),
+    UNVERIFIED_PASSWORD_RESET_CODE_EXCEPTION(HttpStatus.BAD_REQUEST, "미인증 된 인증 코드 입니다."),
 
     /**
      * 401 UNAUTHORIZED
