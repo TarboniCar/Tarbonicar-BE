@@ -1,10 +1,7 @@
 package com.tarbonicar.backend.api.member.controller;
 
 import com.tarbonicar.backend.api.jwt.JwtProvider;
-import com.tarbonicar.backend.api.member.dto.MemberLoginRequestDto;
-import com.tarbonicar.backend.api.member.dto.MemberLoginResponseDto;
-import com.tarbonicar.backend.api.member.dto.MemberResponseDto;
-import com.tarbonicar.backend.api.member.dto.MemberSignupRequestDto;
+import com.tarbonicar.backend.api.member.dto.*;
 import com.tarbonicar.backend.api.member.entity.Member;
 import com.tarbonicar.backend.api.member.repository.MemberRepository;
 import com.tarbonicar.backend.api.member.service.MemberService;
@@ -94,6 +91,14 @@ public class MemberController {
     public ResponseEntity<ApiResponse<Boolean>> checkEmailDuplicate(@RequestParam String email) {
         boolean isDuplicate = memberService.isEmailDuplicate(email);
         return ApiResponse.success(SuccessStatus.CHECK_EMAIL_SUCCESS, isDuplicate);
+    }
+
+    @Operation(summary = "토큰 재발급", description = "refreshToken을 이용해서 accessToken 재발급")
+    @PostMapping("/reissue")
+    public ResponseEntity<ApiResponse<TokenResponseDto>> reissue(@RequestBody TokenRequestDto tokenRequestDto){
+
+        TokenResponseDto tokenResponseDto = memberService.reissueToken(tokenRequestDto);
+        return ApiResponse.success(SuccessStatus.SEND_TOKEN_REISSUE_SUCCESS, tokenResponseDto);
     }
 
 }
