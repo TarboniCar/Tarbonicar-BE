@@ -267,4 +267,13 @@ public class ArticleService {
         }
 
     }
+    // 내 게시글 수
+    public int countMyArticles(String email) {
+        return articleRepository.countByMemberEmail(email);
+    }
+
+    // 내 좋아요
+    public int countMyTotalLikes(String email) {
+        return articleRepository.countTotalLikesByMemberEmail(email);
+    }
 }

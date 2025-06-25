@@ -131,4 +131,25 @@ public class ArticleController {
         articleService.likeArticle(articleId, userDetails.getUsername());
         return ApiResponse.success_only(SuccessStatus.SEND_ARTICLE_LIKE_SUCCESS);
     }
+
+    @Operation(
+            summary = "내가 작성한 게시글 수 조회 API", description = "내가 작성한 게시글 수를 반환합니다.")
+    @GetMapping("/my-count")
+    public ResponseEntity<ApiResponse<Integer>> getMyArticleCount(
+            @AuthenticationPrincipal UserDetails userDetails
+    ) {
+        int count = articleService.countMyArticles(userDetails.getUsername());
+        return ApiResponse.success(SuccessStatus.SEND_ARTICLE_SUCCESS, count);
+    }
+
+    @Operation(
+            summary = "내가 받은 총 좋아요 수 API", description = "내가 작성한 게시글에서 받은 총 좋아요 수를 반환합니다."
+    )
+    @GetMapping("/my-like-count")
+    public ResponseEntity<ApiResponse<Integer>> getMyTotalLikes(
+            @AuthenticationPrincipal UserDetails userDetails
+    ) {
+        int totalLikes = articleService.countMyTotalLikes(userDetails.getUsername());
+        return ApiResponse.success(SuccessStatus.SEND_ARTICLE_SUCCESS, totalLikes);
+    }
 }

@@ -6,6 +6,7 @@ import com.tarbonicar.backend.api.member.entity.Member;
 import com.tarbonicar.backend.api.member.repository.MemberRepository;
 import com.tarbonicar.backend.api.member.service.MemberService;
 import com.tarbonicar.backend.api.member.service.OAuthService;
+import com.tarbonicar.backend.common.exception.BadRequestException;
 import com.tarbonicar.backend.common.response.ApiResponse;
 import com.tarbonicar.backend.common.response.SuccessStatus;
 import io.swagger.v3.oas.annotations.Operation;
@@ -13,14 +14,17 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.Map;
 
@@ -93,6 +97,68 @@ public class MemberController {
         return ApiResponse.success(SuccessStatus.CHECK_EMAIL_SUCCESS, isDuplicate);
     }
 
+    // 마이페이지 닉네임 변경
+    @Operation(summary = "닉네임 변경 API", description = "사용자의 닉네임을 수정합니다.")
+    @PutMapping("/nickname")
+    public ResponseEntity<ApiResponse<Void>> updateNickname(@Valid @RequestBody NicknameUpdateRequestDto requestDto) {
+        String newNickname = requestDto.getNickname();
+        // JWT에서 인증된 사용자 이메일 추출
+        String userName = SecurityContextHolder.getContext().getAuthentication().getName();
+        // 닉네임 변경 서비스 호출
+        memberService.updateNickname(userName, newNickname);
+
+        return ApiResponse.success(SuccessStatus.UPDATE_NICKNAME_SUCCESS, null);
+    }
+
+
+    // 마이페이지 비밀번호 변경
+    @Operation(summary = "비밀번호 변경 API", description = "사용자의 비밀번호를 변경합니다.")
+    @PutMapping("/password")
+    public ResponseEntity<ApiResponse<Void>> updatePassword(
+            @RequestBody @Valid PasswordUpdateRequestDto requestDto) {
+        String userEmail = SecurityContextHolder.getContext().getAuthentication().getName();
+        memberService.updatePassword(userEmail, requestDto);
+        return ApiResponse.success(SuccessStatus.UPDATE_PASSWORD_SUCCESS, null);
+    }
+
+    @Operation(summary = "프로필 이미지 업로드 API", description = "파일을 업로드하고 S3 URL을 반환합니다.")
+    @PostMapping(value = "/profile-image", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<ApiResponse<Map<String, String>>> updateProfileImage(
+            @RequestPart("file") MultipartFile file
+    ) {
+        String email = getCurrentUserEmail(); // 또는 임의로 "test@example.com"
+        String imageUrl = memberService.updateProfileImage(email, file);
+
+        return ApiResponse.success(SuccessStatus.UPDATE_PROFILE_IMAGE_SUCCESS, Map.of("imageUrl", imageUrl));
+    }
+
+    @Operation(summary = "회원 탈퇴 API", description = "현재 로그인한 회원을 탈퇴 처리합니다.")
+    @DeleteMapping("/delete")
+    public
+    ResponseEntity<ApiResponse<Void>> deleteMember() {
+        String email = getCurrentUserEmail(); // 여기서 SecurityContext에서 추출
+        memberService.deleteMember(email);
+        return ApiResponse.success_only(SuccessStatus.DELETE_MEMBER_SUCCESS);
+    }
+
+
+    // 현재 로그인된 사용자의 email 추출
+    private String getCurrentUserEmail() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        return authentication.getName(); // JWT 인증 시 이메일이 principal로 저장되어 있어야 함
+//        return "test2@example.com";
+    }
+
+    @Operation(summary = "회원 정보 확인", description = "테스트용으로 현재 사용자 정보 반환")
+    @GetMapping("/info")
+    public ResponseEntity<Member> getMemberInfo() {
+        String email = getCurrentUserEmail(); // 하드코딩된 이메일 사용
+        Member member = memberRepository.findByEmail(email)
+                .orElseThrow(() -> new BadRequestException("사용자 없음"));
+        return ResponseEntity.ok(member);
+    }
+
+
     @Operation(summary = "토큰 재발급", description = "refreshToken을 이용해서 accessToken 재발급")
     @PostMapping("/reissue")
     public ResponseEntity<ApiResponse<TokenResponseDto>> reissue(@RequestBody TokenRequestDto tokenRequestDto){
@@ -100,5 +166,4 @@ public class MemberController {
         TokenResponseDto tokenResponseDto = memberService.reissueToken(tokenRequestDto);
         return ApiResponse.success(SuccessStatus.SEND_TOKEN_REISSUE_SUCCESS, tokenResponseDto);
     }
-
 }
