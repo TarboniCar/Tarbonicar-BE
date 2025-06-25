@@ -17,6 +17,8 @@ import com.tarbonicar.backend.common.exception.NotFoundException;
 import com.tarbonicar.backend.common.response.ErrorStatus;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -64,16 +66,17 @@ public class ArticleService {
 
     // 게시글 목록 조회 메서드
     @Transactional
-    public List<ArticleResponseDTO> getArticle(
+    public Page<ArticleResponseDTO> getArticle(
             String carType,
             List<String> carName,
             List<Integer> carAge,
             List<ArticleType> articleType,
             SortType sortType,
+            Pageable pageable,
             String memberEmail
     ) {
 
-        List<Article> articleList = articleRepository.findByFilters(carType, carName, carAge, articleType, sortType);
+        Page<Article> articleList = articleRepository.findByFilters(carType, carName, carAge, articleType, sortType, pageable);
 
         // 이메일이 null이 아니면 회원 조회
         Long userId;
@@ -82,7 +85,7 @@ public class ArticleService {
             userId = opt.map(Member::getId).orElse(null);
         } else userId = null;
 
-        return articleList.stream().map(article -> new ArticleResponseDTO(
+        return articleList.map(article -> new ArticleResponseDTO(
                 article.getId(),
                 article.getTitle(),
                 article.getContent(),
@@ -94,14 +97,14 @@ public class ArticleService {
                 null,
                 article.getCarAge().getCarName().getCarName(),
                 article.getCarAge().getCarAge()
-        )).collect(Collectors.toList());
+        ));
     }
 
     // 내가 작성한 게시글 목록 조회 메서드
     @Transactional
-    public List<ArticleResponseDTO> getMyArticle(SortType sortType, String memberEmail) {
+    public Page<ArticleResponseDTO> getMyArticle(SortType sortType, Pageable pageable, String memberEmail) {
 
-        List<Article> articleList = articleRepository.findByMemberId(sortType, memberEmail);
+        Page<Article> articleList = articleRepository.findByMemberId(sortType, pageable, memberEmail);
 
         // 이메일이 null이 아니면 회원 조회
         Long userId;
@@ -110,7 +113,7 @@ public class ArticleService {
             userId = opt.map(Member::getId).orElse(null);
         } else userId = null;
 
-        return articleList.stream().map(article -> new ArticleResponseDTO(
+        return articleList.map(article -> new ArticleResponseDTO(
                 article.getId(),
                 article.getTitle(),
                 article.getContent(),
@@ -122,7 +125,7 @@ public class ArticleService {
                 null,
                 article.getCarAge().getCarName().getCarName(),
                 article.getCarAge().getCarAge()
-        )).collect(Collectors.toList());
+        ));
     }
 
     // 게시글 상세 조회 메서드
@@ -263,5 +266,14 @@ public class ArticleService {
             articleRepository.incrementLikeCount(articleId);
         }
 
+    }
+    // 내 게시글 수
+    public int countMyArticles(String email) {
+        return articleRepository.countByMemberEmail(email);
+    }
+
+    // 내 좋아요
+    public int countMyTotalLikes(String email) {
+        return articleRepository.countTotalLikesByMemberEmail(email);
     }
 }

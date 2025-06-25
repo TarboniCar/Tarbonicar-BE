@@ -129,6 +129,10 @@ public class MemberService {
         return member;
     }
 
+    public boolean isEmailDuplicate(String email) {
+
+        return memberRepository.existsByEmail(email.trim());
+    }
     // 닉네임 변경
     @Transactional
     public void updateNickname(String email, String nickname) {
