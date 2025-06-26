@@ -100,12 +100,17 @@ public class MemberController {
     // 마이페이지 닉네임 변경
     @Operation(summary = "닉네임 변경 API", description = "사용자의 닉네임을 수정합니다.")
     @PutMapping("/nickname")
-    public ResponseEntity<ApiResponse<Void>> updateNickname(@Valid @RequestBody NicknameUpdateRequestDto requestDto) {
+    public ResponseEntity<ApiResponse<Void>> updateNickname(@RequestBody NicknameUpdateRequestDto requestDto) {
         String newNickname = requestDto.getNickname();
         // JWT에서 인증된 사용자 이메일 추출
         String userName = SecurityContextHolder.getContext().getAuthentication().getName();
         // 닉네임 변경 서비스 호출
         memberService.updateNickname(userName, newNickname);
+
+        // 디버깅용 로그 출력
+        System.out.println("🔧 닉네임 변경 요청 들어옴");
+        System.out.println("📨 유저네임: " + userName);
+        System.out.println("📝 변경할 닉네임: " + newNickname);
 
         return ApiResponse.success(SuccessStatus.UPDATE_NICKNAME_SUCCESS, null);
     }
@@ -141,12 +146,10 @@ public class MemberController {
         return ApiResponse.success_only(SuccessStatus.DELETE_MEMBER_SUCCESS);
     }
 
-
     // 현재 로그인된 사용자의 email 추출
     private String getCurrentUserEmail() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         return authentication.getName(); // JWT 인증 시 이메일이 principal로 저장되어 있어야 함
-//        return "test2@example.com";
     }
 
     @Operation(summary = "회원 정보 확인", description = "테스트용으로 현재 사용자 정보 반환")
