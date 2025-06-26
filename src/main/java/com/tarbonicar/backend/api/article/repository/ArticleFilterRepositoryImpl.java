@@ -2,14 +2,16 @@ package com.tarbonicar.backend.api.article.repository;
 
 import com.querydsl.core.BooleanBuilder;
 import com.querydsl.core.types.OrderSpecifier;
+import com.querydsl.core.types.Projections;
+import com.querydsl.core.types.dsl.Expressions;
+import com.querydsl.jpa.JPAExpressions;
 import com.querydsl.jpa.impl.JPAQueryFactory;
-import com.tarbonicar.backend.api.article.entity.Article;
-import com.tarbonicar.backend.api.article.entity.ArticleType;
-import com.tarbonicar.backend.api.article.entity.QArticle;
-import com.tarbonicar.backend.api.article.entity.SortType;
+import com.tarbonicar.backend.api.article.dto.ArticleResponseDTO;
+import com.tarbonicar.backend.api.article.entity.*;
 import com.tarbonicar.backend.api.category.entity.QCarAge;
 import com.tarbonicar.backend.api.category.entity.QCarName;
 import com.tarbonicar.backend.api.category.entity.QCarType;
+import com.tarbonicar.backend.api.comment.entity.QComment;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
@@ -24,18 +26,21 @@ public class ArticleFilterRepositoryImpl implements ArticleFilterRepository {
     private final JPAQueryFactory queryFactory;
 
     @Override
-    public Page<Article> findByFilters(
+    public Page<ArticleResponseDTO> findByFilters(
             String carType,
             List<String> carNames,
             List<Integer> carAges,
             List<ArticleType> articleTypes,
             SortType sortType,
-            Pageable pageable
+            Pageable pageable,
+            Long userId
     ) {
         QArticle article = QArticle.article;
         QCarAge carAge = QCarAge.carAge1;
         QCarName carName = QCarName.carName1;
         QCarType carTypeEntity = QCarType.carType1;
+        QArticleLike articleLike = QArticleLike.articleLike;
+        QComment comment = QComment.comment;
 
         BooleanBuilder builder = new BooleanBuilder();
 
@@ -63,12 +68,33 @@ public class ArticleFilterRepositoryImpl implements ArticleFilterRepository {
         OrderSpecifier<?> order = getSortSpecifier(sortType, article);
 
         // 페이징 처라
-        List<Article> result = queryFactory
-                .selectFrom(article)
-                .leftJoin(article.carAge, carAge).fetchJoin()
-                .leftJoin(carAge.carName, carName).fetchJoin()
-                .leftJoin(carName.carType, carTypeEntity).fetchJoin()
-                .leftJoin(article.member).fetchJoin()
+        List<ArticleResponseDTO> results = queryFactory
+                .select(Projections.constructor(ArticleResponseDTO.class,
+                        article.id,
+                        article.title,
+                        article.content,
+                        article.likeCount,
+                        article.viewCount,
+                        // 댓글 개수 서브쿼리
+                        JPAExpressions.select(comment.count())
+                                .from(comment)
+                                .where(comment.article.id.eq(article.id)),
+                        article.createdAt,
+                        // 좋아요 여부 서브쿼리
+                        userId != null ?
+                                JPAExpressions.selectOne()
+                                        .from(articleLike)
+                                        .where(articleLike.article.id.eq(article.id)
+                                                .and(articleLike.member.id.eq(userId)))
+                                        .exists() : Expressions.asBoolean(false),
+                        carName.carName,
+                        carAge.carAge
+                ))
+                .from(article)
+                .leftJoin(article.carAge, carAge)
+                .leftJoin(carAge.carName, carName)
+                .leftJoin(carName.carType, carTypeEntity)
+                .leftJoin(article.member)
                 .where(builder)
                 .orderBy(order)
                 .offset(pageable.getOffset())
@@ -76,33 +102,76 @@ public class ArticleFilterRepositoryImpl implements ArticleFilterRepository {
                 .fetch();
 
         long total = queryFactory
+                .select(article.count())
+                .from(article)
+                .leftJoin(article.carAge, carAge)
+                .leftJoin(carAge.carName, carName)
+                .where(builder)
+                .fetchOne();
+
+        /*long total = queryFactory
                 .selectFrom(article)
                 .leftJoin(article.carAge, carAge)
                 .leftJoin(carAge.carName, carName)
                 .leftJoin(carName.carType, carTypeEntity)
                 .leftJoin(article.member)
                 .where(builder)
-                .fetchCount();
+                .fetchCount();*/
 
-        return new PageImpl<>(result, pageable, total);
+        return new PageImpl<>(results, pageable, total);
     }
 
     @Override
-    public Page<Article> findByMemberId(
+    public Page<ArticleResponseDTO> findByMemberId(
             SortType sortType,
             Pageable pageable,
-            String memberId
+            String memberId,
+            Long userId
     ) {
         QArticle article = QArticle.article;
         QCarAge carAge = QCarAge.carAge1;
         QCarName carName = QCarName.carName1;
         QCarType carTypeEntity = QCarType.carType1;
+        QArticleLike articleLike = QArticleLike.articleLike;
+        QComment comment = QComment.comment;
 
         // 정렬 기준
         OrderSpecifier<?> order = getSortSpecifier(sortType, article);
 
+        List<ArticleResponseDTO> result = queryFactory
+                .select(Projections.constructor(ArticleResponseDTO.class,
+                        article.id,
+                        article.title,
+                        article.content,
+                        article.likeCount,
+                        article.viewCount,
+                        // 댓글 개수 서브쿼리
+                        JPAExpressions.select(comment.count())
+                                .from(comment)
+                                .where(comment.article.id.eq(article.id)),
+                        article.createdAt,
+                        // 좋아요 여부 서브쿼리
+                        userId != null ?
+                                JPAExpressions.selectOne()
+                                        .from(articleLike)
+                                        .where(articleLike.article.id.eq(article.id)
+                                                .and(articleLike.member.id.eq(userId)))
+                                        .exists() : Expressions.asBoolean(false),
+                        carName.carName,
+                        carAge.carAge
+                        )).from(article)
+                .leftJoin(article.carAge, carAge)
+                .leftJoin(carAge.carName, carName)
+                .leftJoin(carName.carType, carTypeEntity)
+                .leftJoin(article.member)
+                .where(article.member.email.eq(memberId))
+                .orderBy(order)
+                .offset(pageable.getOffset())
+                .limit(pageable.getPageSize())
+                .fetch();
+
         // 페이징 처라
-        List<Article> result = queryFactory
+        /*List<Article> result = queryFactory
                 .selectFrom(article)
                 .leftJoin(article.carAge, carAge).fetchJoin()
                 .leftJoin(carAge.carName, carName).fetchJoin()
@@ -112,12 +181,18 @@ public class ArticleFilterRepositoryImpl implements ArticleFilterRepository {
                 .orderBy(order)
                 .offset(pageable.getOffset())
                 .limit(pageable.getPageSize())
-                .fetch();
+                .fetch();*/
 
-        long total = queryFactory
+        /*long total = queryFactory
                 .selectFrom(article)
                 .where(article.member.email.eq(memberId))
-                .fetchCount();
+                .fetchCount();*/
+
+        long total = queryFactory
+                .select(article.count())
+                .from(article)
+                .where(article.member.email.eq(memberId))
+                .fetchOne();
 
         return new PageImpl<>(result, pageable, total);
     }

@@ -1,6 +1,5 @@
 package com.tarbonicar.backend.api.article.dto;
 
-import com.tarbonicar.backend.api.article.entity.Article;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -15,14 +14,13 @@ public class ArticleResponseDTO {
     private Long id;
     private String title;
     private String content;
-    private long likeCount;
-    private long viewCount;
-    private long commentCount;
+    private Long likeCount;
+    private Long viewCount;
+    private Long commentCount;
     private LocalDateTime createAt;
 
-    private boolean myLike;
-    private String contentImage; // 게시글 대표 사진
+    private Boolean myLike;
 
     private String carName;
-    private int carAge;
+    private Integer carAge;
 }

@@ -76,7 +76,16 @@ public class ArticleService {
             String memberEmail
     ) {
 
-        Page<Article> articleList = articleRepository.findByFilters(carType, carName, carAge, articleType, sortType, pageable);
+        // 이메일이 null이 아니면 회원 조회
+        Long userId;
+        if (memberEmail != null && !memberEmail.isBlank()) {
+            Optional<Member> opt = memberRepository.findByEmail(memberEmail.trim());
+            userId = opt.map(Member::getId).orElse(null);
+        } else userId = null;
+
+        return articleRepository.findByFilters(carType, carName, carAge, articleType, sortType, pageable, userId);
+
+        /*Page<Article> articleList = articleRepository.findByFilters(carType, carName, carAge, articleType, sortType, pageable);
 
         // 이메일이 null이 아니면 회원 조회
         Long userId;
@@ -97,14 +106,23 @@ public class ArticleService {
                 null,
                 article.getCarAge().getCarName().getCarName(),
                 article.getCarAge().getCarAge()
-        ));
+        ));*/
     }
 
     // 내가 작성한 게시글 목록 조회 메서드
     @Transactional
     public Page<ArticleResponseDTO> getMyArticle(SortType sortType, Pageable pageable, String memberEmail) {
 
-        Page<Article> articleList = articleRepository.findByMemberId(sortType, pageable, memberEmail);
+        // 이메일이 null이 아니면 회원 조회
+        Long userId;
+        if (memberEmail != null && !memberEmail.isBlank()) {
+            Optional<Member> opt = memberRepository.findByEmail(memberEmail.trim());
+            userId = opt.map(Member::getId).orElse(null);
+        } else userId = null;
+
+        return articleRepository.findByMemberId(sortType, pageable, memberEmail, userId);
+
+        /*Page<ArticleResponseDTO> articleList = articleRepository.findByMemberId(sortType, pageable, memberEmail);
 
         // 이메일이 null이 아니면 회원 조회
         Long userId;
@@ -123,9 +141,9 @@ public class ArticleService {
                 article.getCreatedAt(),
                 (userId != null) && articleLikeRepository.existsByArticle_IdAndMember_Id(article.getId(), userId),
                 null,
-                article.getCarAge().getCarName().getCarName(),
+                //article.getCarAge().getCarName().getCarName(),
                 article.getCarAge().getCarAge()
-        ));
+        ));*/
     }
 
     // 게시글 상세 조회 메서드

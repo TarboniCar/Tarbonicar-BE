@@ -40,8 +40,8 @@ public class SwaggerConfig {
         SecurityRequirement refreshTokenRequirement = new SecurityRequirement().addList(refreshTokenHeader);
 
         Server server = new Server();
-        server.setUrl("https://www.tarbonicar.kro.kr:81");
-        //server.setUrl("/");
+//        server.setUrl("https://www.tarbonicar.kro.kr:81");
+        server.setUrl("/");
 
         return new OpenAPI()
                 .info(new Info()
