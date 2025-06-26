@@ -100,7 +100,7 @@ public class MemberController {
     // 마이페이지 닉네임 변경
     @Operation(summary = "닉네임 변경 API", description = "사용자의 닉네임을 수정합니다.")
     @PutMapping("/nickname")
-    public ResponseEntity<ApiResponse<Void>> updateNickname(@RequestBody NicknameUpdateRequestDto requestDto) {
+    public ResponseEntity<ApiResponse<Void>> updateNickname(@Valid @RequestBody NicknameUpdateRequestDto requestDto) {
         String newNickname = requestDto.getNickname();
         // JWT에서 인증된 사용자 이메일 추출
         String userName = SecurityContextHolder.getContext().getAuthentication().getName();
