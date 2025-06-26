@@ -1,6 +1,10 @@
 package com.tarbonicar.backend.api.member.service;
 
+import com.tarbonicar.backend.api.article.repository.ArticleLikeRepository;
+import com.tarbonicar.backend.api.article.repository.ArticleRepository;
+import com.tarbonicar.backend.api.article.service.ArticleService;
 import com.tarbonicar.backend.api.aws.s3.service.S3Service;
+import com.tarbonicar.backend.api.comment.repository.CommentRepository;
 import com.tarbonicar.backend.api.jwt.JwtProvider;
 import com.tarbonicar.backend.api.member.dto.*;
 import com.tarbonicar.backend.api.member.entity.Member;
@@ -10,6 +14,8 @@ import com.tarbonicar.backend.common.exception.NotFoundException;
 import com.tarbonicar.backend.common.response.ErrorStatus;
 import com.tarbonicar.backend.api.jwt.JwtProvider;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -27,12 +33,17 @@ import java.util.Map;
 @Service
 @RequiredArgsConstructor
 public class MemberService {
-
+    private static final Logger log = LoggerFactory.getLogger(MemberService.class);
     private final MemberRepository memberRepository;
     private final PasswordEncoder passwordEncoder;
     private final OAuthService oAuthService;
     private final JwtProvider jwtProvider;
     private final S3Service s3Service;
+
+    private final ArticleLikeRepository articleLikeRepository;
+    private final CommentRepository commentRepository;
+    private final ArticleRepository articleRepository;
+    private final ArticleService articleService;
 
     // 이메일 회원가입 메서드
     @Transactional
@@ -177,12 +188,20 @@ public class MemberService {
         }
     }
 
-    // 회원 탈퇴
     @Transactional
     public void deleteMember(String email) {
         Member member = memberRepository.findByEmail(email)
                 .orElseThrow(() -> new BadRequestException(ErrorStatus.MEMBER_NOT_FOUND_EXCEPTION.getMessage()));
 
+        commentRepository.deleteByMember(member);
+        List<Long> likedArticleIds = articleLikeRepository.findLikedArticleIdsByMemberId(member.getId());
+        if (!likedArticleIds.isEmpty()) {
+            articleRepository.decreaseLikeCount(likedArticleIds);
+        }
+        articleLikeRepository.deleteByMemberId(member.getId());
+        articleRepository.deleteByMember(member);
+
+        // 마지막으로 회원 정보 삭제
         memberRepository.delete(member);
     }
 

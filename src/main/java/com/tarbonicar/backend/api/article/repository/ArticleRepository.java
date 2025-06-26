@@ -1,11 +1,14 @@
 package com.tarbonicar.backend.api.article.repository;
 
 import com.tarbonicar.backend.api.article.entity.Article;
+import com.tarbonicar.backend.api.member.entity.Member;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
 
 public interface ArticleRepository extends JpaRepository<Article, Long>, ArticleFilterRepository {
 
@@ -32,4 +35,13 @@ public interface ArticleRepository extends JpaRepository<Article, Long>, Article
     // 내가 받은 좋아요 수 조회
     @Query("SELECT COALESCE(SUM(a.likeCount), 0) FROM Article a WHERE a.member.email = :email")
     int countTotalLikesByMemberEmail(@Param("email") String email);
+
+    // 회원탈퇴 댓글 삭제
+    int deleteByMember(Member member);
+
+    // 회원탈퇴 좋아요 -1
+    @Modifying
+    @Query("UPDATE Article a SET a.likeCount = a.likeCount - 1 WHERE a.id IN :articleIds")
+    void decreaseLikeCount(@Param("articleIds") List<Long> articleIds);
+
 }
