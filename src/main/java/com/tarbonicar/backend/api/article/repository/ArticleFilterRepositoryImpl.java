@@ -101,24 +101,18 @@ public class ArticleFilterRepositoryImpl implements ArticleFilterRepository {
                 .limit(pageable.getPageSize())
                 .fetch();
 
-        long total = queryFactory
+        Long total = queryFactory
                 .select(article.count())
                 .from(article)
                 .leftJoin(article.carAge, carAge)
                 .leftJoin(carAge.carName, carName)
+                .leftJoin(carName.carType, carTypeEntity)
                 .where(builder)
                 .fetchOne();
 
-        /*long total = queryFactory
-                .selectFrom(article)
-                .leftJoin(article.carAge, carAge)
-                .leftJoin(carAge.carName, carName)
-                .leftJoin(carName.carType, carTypeEntity)
-                .leftJoin(article.member)
-                .where(builder)
-                .fetchCount();*/
+        long totalCount = (total == null) ? 0 : total; // NPE 방지용
 
-        return new PageImpl<>(results, pageable, total);
+        return new PageImpl<>(results, pageable, totalCount);
     }
 
     @Override
@@ -170,31 +164,15 @@ public class ArticleFilterRepositoryImpl implements ArticleFilterRepository {
                 .limit(pageable.getPageSize())
                 .fetch();
 
-        // 페이징 처라
-        /*List<Article> result = queryFactory
-                .selectFrom(article)
-                .leftJoin(article.carAge, carAge).fetchJoin()
-                .leftJoin(carAge.carName, carName).fetchJoin()
-                .leftJoin(carName.carType, carTypeEntity).fetchJoin()
-                .leftJoin(article.member).fetchJoin()
-                .where(article.member.email.eq(memberId))
-                .orderBy(order)
-                .offset(pageable.getOffset())
-                .limit(pageable.getPageSize())
-                .fetch();*/
-
-        /*long total = queryFactory
-                .selectFrom(article)
-                .where(article.member.email.eq(memberId))
-                .fetchCount();*/
-
-        long total = queryFactory
+        Long total = queryFactory
                 .select(article.count())
                 .from(article)
                 .where(article.member.email.eq(memberId))
                 .fetchOne();
 
-        return new PageImpl<>(result, pageable, total);
+        long totalCount = (total == null) ? 0 : total; // NPE 방지용
+
+        return new PageImpl<>(result, pageable, totalCount);
     }
 
     private OrderSpecifier<?> getSortSpecifier(SortType sortType, QArticle article) {
