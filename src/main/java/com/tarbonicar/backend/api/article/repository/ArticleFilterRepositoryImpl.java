@@ -106,6 +106,7 @@ public class ArticleFilterRepositoryImpl implements ArticleFilterRepository {
                 .from(article)
                 .leftJoin(article.carAge, carAge)
                 .leftJoin(carAge.carName, carName)
+                .leftJoin(carName.carType, carTypeEntity)
                 .where(builder)
                 .fetchOne();
 
