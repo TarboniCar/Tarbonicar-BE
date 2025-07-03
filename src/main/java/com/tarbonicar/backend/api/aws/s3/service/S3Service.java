@@ -47,7 +47,9 @@ public class S3Service {
                 : "";
 
         // 저장할 파일명 구성
-        String fileName = baseName + "_" + currentDateTime + extension;
+        //String fileName = baseName + "_" + currentDateTime + extension;
+        String fileName = randomString + "_" + currentDateTime + extension;
+
         // S3 의 키 (경로) 구성
         String fileKey = String.format("%s/%s/%s",
                 dir, randomString, fileName);
